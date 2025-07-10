@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kak Indira - Konselor Kesehatan Mental</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #6c5ce7 50%, #a29bfe 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2d3436;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            color: #636e72;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .status {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .status.idle {
+            background: #d1f2eb;
+            color: #00b894;
+        }
+
+        .status.recording {
+            background: #ffeaa7;
+            color: #e17055;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.processing {
+            background: #e8f4f8;
+            color: #0984e3;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .controls {
+            margin-bottom: 30px;
+        }
+
+        .record-btn {
+            background: linear-gradient(45deg, #00b894, #00a085);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 130px;
+            height: 130px;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 15px;
+            box-shadow: 0 15px 35px rgba(0, 184, 148, 0.3);
+        }
+
+        .record-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 45px rgba(0, 184, 148, 0.4);
+        }
+
+        .record-btn:active {
+            transform: translateY(0);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(45deg, #e17055, #d63031);
+            animation: recordingPulse 1s infinite;
+        }
+
+        @keyframes recordingPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .therapy-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .therapy-btn {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(116, 185, 255, 0.3);
+        }
+
+        .therapy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.4);
+        }
+
+        .therapy-btn.secondary {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .therapy-btn.secondary:hover {
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+        }
+
+        .conversation {
+            max-height: 450px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            text-align: left;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 18px 22px;
+            border-radius: 20px;
+            max-width: 85%;
+            word-wrap: break-word;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.assistant {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+            color: white;
+            margin-right: auto;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 25px;
+        }
+
+        .latency-info {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .latency-info.fast {
+            background: rgba(0, 184, 148, 0.8);
+        }
+
+        .latency-info.medium {
+            background: rgba(255, 159, 67, 0.8);
+        }
+
+        .latency-info.slow {
+            background: rgba(209, 52, 49, 0.8);
+        }
+
+        .performance-stats {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .performance-stats h4 {
+            margin: 0 0 15px 0;
+            color: #2d3436;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 0.9em;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #00b894;
+            font-size: 1.2em;
+        }
+
+        .stat-label {
+            color: #636e72;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00b894;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #d63031;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .instructions {
+            background: linear-gradient(45deg, #d1f2eb, #b8e6d3);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            color: #00b894;
+            border: 2px solid rgba(0, 184, 148, 0.2);
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #00a085;
+            font-size: 1.2em;
+        }
+
+        .instructions ul {
+            text-align: left;
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .therapy-info {
+            background: linear-gradient(45deg, #e8f4f8, #d6eaf8);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            color: #0984e3;
+            border: 2px solid rgba(9, 132, 227, 0.2);
+        }
+
+        .crisis-banner {
+            background: linear-gradient(45deg, #ffeaa7, #fdcb6e);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: #e17055;
+            border: 2px solid rgba(225, 112, 85, 0.2);
+            font-size: 0.9em;
+        }
+
+        .crisis-banner strong {
+            color: #d63031;
+        }
+
+        .session-info {
+            background: linear-gradient(45deg, #f5f3ff, #e8e5ff);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            color: #6c5ce7;
+            display: none;
+        }
+
+        /* Status indicator styles */
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .status.idle {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .status.recording {
+            background: linear-gradient(45deg, #e17055, #d63031);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.processing {
+            background: linear-gradient(45deg, #fdcb6e, #e17055);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.speaking {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.loading {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8;
+                transform: scale(1.02);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 15px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .record-btn {
+                width: 110px;
+                height: 110px;
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-item {
+                padding: 10px;
+                font-size: 0.8em;
+            }
+
+            .therapy-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .therapy-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Kak Indira</h1>
+        <p class="subtitle">Konselor Kesehatan Mental yang Memahami Budaya Indonesia</p>
+        
+        <div class="crisis-banner">
+            <strong>🚨 Krisis Mental:</strong> Jika Anda memiliki pikiran untuk menyakiti diri sendiri atau orang lain, segera hubungi 
+            <strong>119 ext. 8</strong> (Hotline Kemenkes) atau <strong>021-500-454</strong> (Halo Jiwa) untuk bantuan darurat.
+        </div>
+        
+        <div class="instructions">
+            <h3>🌟 Bagaimana Saya Dapat Membantu:</h3>
+            <ul>
+                <li>🎤 Klik tombol hijau untuk mulai berbicara</li>
+                <li>💬 Ceritakan perasaan atau masalah Anda dalam <strong>Bahasa Indonesia</strong></li>
+                <li>🤝 Saya akan mendengarkan dengan empati dan memberikan dukungan</li>
+                <li>🕊️ Semua percakapan bersifat rahasia dan aman</li>
+                <li>🌸 Saya memahami nilai-nilai budaya dan spiritual Indonesia</li>
+            </ul>
+        </div>
+
+        <div class="therapy-info">
+            <p style="margin-bottom: 10px;">
+                💚 <strong>Pendekatan Terapeutik:</strong> Saya menggunakan pendekatan yang sensitif terhadap budaya Indonesia, menghormati nilai-nilai Islam, dan memahami dinamika keluarga Indonesia.
+            </p>
+            <p style="font-size: 0.9em; margin-top: 10px;">
+                🎯 <strong>Fokus Layanan:</strong> Kecemasan, depresi, stres, masalah keluarga, tekanan sosial, dan dukungan emosional.
+            </p>
+        </div>
+
+        <div class="status idle" id="status">
+            🔊 Klik di mana saja untuk mengaktifkan audio dan mendengar sambutan dari Kak Indira
+        </div>
+
+        <div class="session-info" id="sessionInfo">
+            <p>🔄 <span id="contextInfo">Informasi sesi akan muncul di sini</span></p>
+        </div>
+
+        <div class="performance-stats" id="performanceStats">
+            <h4>📊 Statistik Respons Terapi</h4>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="lastLatency">-</div>
+                    <div class="stat-label">Respons Terakhir</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgLatency">-</div>
+                    <div class="stat-label">Rata-rata</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="fastestLatency">-</div>
+                    <div class="stat-label">Tercepat</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="slowestLatency">-</div>
+                    <div class="stat-label">Terlambat</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="record-btn" id="recordBtn">🔊</button>
+            <div class="therapy-actions">
+                <button class="therapy-btn" id="clearBtn">🔄 Mulai Sesi Baru</button>
+                <button class="therapy-btn secondary" id="resourcesBtn">📞 Sumber Bantuan</button>
+                <button class="therapy-btn secondary" id="tipsBtn">💡 Tips Kesehatan Mental</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Memproses dengan penuh perhatian...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="conversation" id="conversation"></div>
+    </div>
+
+    <script>
+        class IndonesianMentalHealthBot {
+            constructor() {
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.sessionId = null;
+                this.messageCount = 0;
+                this.startTime = null;
+                this.latencies = [];
+                this.audioEnabled = false;
+                this.welcomePlayed = false;
+                
+                this.recordBtn = document.getElementById('recordBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.resourcesBtn = document.getElementById('resourcesBtn');
+                this.tipsBtn = document.getElementById('tipsBtn');
+                this.status = document.getElementById('status');
+                this.conversation = document.getElementById('conversation');
+                this.loading = document.getElementById('loading');
+                this.error = document.getElementById('error');
+                this.sessionInfo = document.getElementById('sessionInfo');
+                this.contextInfo = document.getElementById('contextInfo');
+                this.performanceStats = document.getElementById('performanceStats');
+                this.lastLatency = document.getElementById('lastLatency');
+                this.avgLatency = document.getElementById('avgLatency');
+                this.fastestLatency = document.getElementById('fastestLatency');
+                this.slowestLatency = document.getElementById('slowestLatency');
+                
+                this.initEventListeners();
+                this.initializeAudioAndWelcome();
+            }
+
+            initEventListeners() {
+                this.recordBtn.addEventListener('click', async () => {
+                    // Enable audio on first interaction if not already enabled
+                    if (!this.audioEnabled) {
+                        await this.enableAudioAndPlayWelcome();
+                        return;
+                    }
+                    
+                    if (this.isRecording) {
+                        this.stopRecording();
+                    } else {
+                        this.startRecording();
+                    }
+                });
+
+                this.clearBtn.addEventListener('click', () => {
+                    this.clearConversation();
+                });
+
+                this.resourcesBtn.addEventListener('click', () => {
+                    this.showCrisisResources();
+                });
+
+                this.tipsBtn.addEventListener('click', () => {
+                    this.showTherapyTips();
+                });
+                
+                // Enable audio on any user interaction
+                document.addEventListener('click', async (e) => {
+                    if (!this.audioEnabled && e.target.closest('.container')) {
+                        await this.enableAudioAndPlayWelcome();
+                    }
+                }, { once: true });
+            }
+
+            async initializeAudioAndWelcome() {
+                // Show prompt to enable audio
+                this.status.textContent = '🔊 Klik di mana saja untuk mengaktifkan audio dan mendengar sambutan dari Kak Indira';
+                this.status.className = 'status idle';
+                
+                // Show a visual indicator that audio is not yet enabled
+                this.recordBtn.textContent = '🔊';
+                this.recordBtn.style.background = 'linear-gradient(45deg, #74b9ff, #0984e3)';
+            }
+
+            async enableAudioAndPlayWelcome() {
+                if (this.audioEnabled) return;
+                
+                try {
+                    // Test audio capability by creating a silent audio context
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    await audioContext.resume();
+                    audioContext.close();
+                    
+                    this.audioEnabled = true;
+                    
+                    // Reset button appearance
+                    this.recordBtn.textContent = '🎤';
+                    this.recordBtn.style.background = '';
+                    
+                    // Play welcome message immediately
+                    if (!this.welcomePlayed) {
+                        await this.showWelcomeMessage();
+                        this.welcomePlayed = true;
+                    }
+                    
+                } catch (error) {
+                    console.error('Failed to enable audio:', error);
+                    this.status.textContent = 'Audio tidak dapat diaktifkan. Gunakan mode teks.';
+                    this.status.className = 'status idle';
+                    
+                    // Show welcome message without audio as fallback
+                    if (!this.welcomePlayed) {
+                        await this.showWelcomeMessage();
+                        this.welcomePlayed = true;
+                    }
+                }
+            }
+
+            async showWelcomeMessage() {
+                // Add welcome message from therapist with auto-generated voice
+                const welcomeMessage = `Assalamualaikum dan selamat datang. Saya Kak Indira, konselor kesehatan mental yang memahami budaya Indonesia. 
+
+Saya di sini untuk mendengarkan Anda dengan penuh empati dan memberikan dukungan yang Anda butuhkan. Semua yang Anda ceritakan akan dijaga kerahasiaannya.
+
+Silakan berbicara dengan bebas tentang perasaan atau masalah yang Anda hadapi. Saya akan merespons dengan pendekatan yang menghormati nilai-nilai budaya dan spiritual kita.
+
+Kapan Anda siap untuk mulai berbicara?`;
+
+                try {
+                    // Only generate TTS if audio is enabled
+                    if (this.audioEnabled) {
+                        // Show loading status
+                        this.status.textContent = 'Kak Indira sedang mempersiapkan sambutan... 🎤';
+                        this.status.className = 'status loading';
+                        
+                        // Generate TTS for welcome message
+                        const response = await fetch('/text-to-speech', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                text: welcomeMessage,
+                                session_id: null
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            // Add message with auto-playing audio
+                            await this.addMessage(welcomeMessage, 'assistant', data.audio_url);
+                            
+                        } else {
+                            // Fallback: show message without audio if TTS fails
+                            console.warn('TTS failed for welcome message, showing text only');
+                            await this.addMessage(welcomeMessage, 'assistant');
+                            this.status.textContent = 'Siap mendengarkan Anda. Klik tombol hijau untuk berbicara.';
+                            this.status.className = 'status idle';
+                        }
+                    } else {
+                        // Show message without audio if audio not enabled
+                        await this.addMessage(welcomeMessage, 'assistant');
+                        this.status.textContent = 'Siap mendengarkan Anda. Klik tombol hijau untuk berbicara.';
+                        this.status.className = 'status idle';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error generating welcome voice:', error);
+                    // Fallback: show message without audio if error occurs
+                    await this.addMessage(welcomeMessage, 'assistant');
+                    this.status.textContent = 'Siap mendengarkan Anda. Klik tombol hijau untuk berbicara.';
+                    this.status.className = 'status idle';
+                }
+            }
+
+            async startRecording() {
+                try {
+                    this.startTime = Date.now();
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    this.mediaRecorder = new MediaRecorder(stream);
+                    this.audioChunks = [];
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        this.audioChunks.push(event.data);
+                    };
+                    
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+                        this.sendAudioToTherapist(audioBlob);
+                        
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    this.mediaRecorder.start();
+                    this.isRecording = true;
+                    
+                    this.recordBtn.textContent = '⏹️';
+                    this.recordBtn.classList.add('recording');
+                    this.status.textContent = 'Saya mendengarkan Anda... Klik berhenti jika sudah selesai berbicara.';
+                    this.status.className = 'status recording';
+                    
+                } catch (error) {
+                    this.showError('Maaf, tidak dapat mengakses mikrofon: ' + error.message);
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    
+                    this.recordBtn.textContent = '🎤';
+                    this.recordBtn.classList.remove('recording');
+                    this.status.textContent = 'Memproses dengan penuh perhatian...';
+                    this.status.className = 'status processing';
+                    
+                    this.showLoading(true);
+                }
+            }
+
+            async sendAudioToTherapist(audioBlob) {
+                try {
+                    const formData = new FormData();
+                    formData.append('audio_file', audioBlob, 'therapy_session.wav');
+                    
+                    if (this.sessionId) {
+                        formData.append('session_id', this.sessionId);
+                    }
+                    
+                    const response = await fetch('/voice-therapy', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const endTime = Date.now();
+                        const latency = (endTime - this.startTime) / 1000;
+                        
+                        this.sessionId = data.session_id;
+                        
+                        this.addMessage(data.user_text, 'user');
+                        
+                        // Auto-play assistant response
+                        this.status.textContent = 'Kak Indira sedang berbicara... 🗣️';
+                        this.status.className = 'status speaking';
+                        
+                        await this.addMessage(data.ai_response, 'assistant', data.audio_url, latency);
+                        
+                        this.updatePerformanceStats(latency);
+                        
+                    } else {
+                        this.showError(data.error || 'Terjadi kesalahan dalam memproses permintaan Anda.');
+                    }
+                    
+                } catch (error) {
+                    this.showError('Maaf, terjadi kesalahan teknis: ' + error.message);
+                    this.status.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                    this.status.className = 'status idle';
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async addMessage(text, sender, audioUrl = null, latency = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                let latencyDisplay = '';
+                if (sender === 'assistant' && latency !== null) {
+                    const latencyClass = latency < 5 ? 'fast' : latency < 10 ? 'medium' : 'slow';
+                    const status = latency < 20 ? '✅' : '⚠️';
+                    latencyDisplay = `<div class="latency-info ${latencyClass}">
+                        ${status} Waktu respons: ${latency.toFixed(2)}s
+                    </div>`;
+                }
+                
+                // Create audio element with autoplay for assistant messages
+                const audioElement = audioUrl ? `<audio ${sender === 'assistant' ? 'autoplay' : 'controls'} class="audio-player" id="audio-${Date.now()}">
+                    <source src="${audioUrl}" type="audio/mpeg">
+                    Browser Anda tidak mendukung pemutar audio.
+                </audio>` : '';
+                
+                messageDiv.innerHTML = `
+                    <p><strong>${sender === 'user' ? 'Anda' : 'Kak Indira'}:</strong> ${text}</p>
+                    ${audioElement}
+                    ${latencyDisplay}
+                `;
+                
+                this.conversation.appendChild(messageDiv);
+                this.conversation.scrollTop = this.conversation.scrollHeight;
+                
+                // Auto-play assistant audio and handle events
+                if (sender === 'assistant' && audioUrl) {
+                    const audio = messageDiv.querySelector('audio');
+                    if (audio) {
+                        try {
+                            // Add event listeners
+                            audio.addEventListener('loadstart', () => {
+                                this.status.textContent = 'Memuat audio respons... 🔄';
+                                this.status.className = 'status loading';
+                            });
+                            
+                            audio.addEventListener('canplay', () => {
+                                this.status.textContent = 'Kak Indira sedang berbicara... 🗣️';
+                                this.status.className = 'status speaking';
+                            });
+                            
+                            audio.addEventListener('ended', () => {
+                                this.status.textContent = 'Siap mendengarkan Anda lagi. Klik tombol hijau untuk berbicara.';
+                                this.status.className = 'status idle';
+                            });
+                            
+                            audio.addEventListener('error', (e) => {
+                                console.error('Audio playback error:', e);
+                                this.status.textContent = 'Siap mendengarkan Anda lagi. Klik tombol hijau untuk berbicara.';
+                                this.status.className = 'status idle';
+                            });
+                            
+                            // Try to play the audio
+                            const playPromise = audio.play();
+                            
+                            if (playPromise !== undefined) {
+                                await playPromise;
+                            }
+                            
+                        } catch (error) {
+                            console.error('Error playing audio:', error);
+                            this.status.textContent = 'Audio tidak dapat diputar otomatis. Silakan klik tombol play.';
+                            this.status.className = 'status idle';
+                            // Fallback: show controls if autoplay fails
+                            audio.controls = true;
+                            audio.removeAttribute('autoplay');
+                        }
+                    }
+                }
+                
+                if (sender === 'user') {
+                    this.messageCount++;
+                    this.updateSessionInfo();
+                }
+            }
+
+            updateSessionInfo() {
+                if (this.messageCount > 0) {
+                    const exchanges = this.messageCount;
+                    this.contextInfo.textContent = `Sesi terapi: ${exchanges} pertukaran percakapan`;
+                    this.sessionInfo.style.display = 'block';
+                } else {
+                    this.sessionInfo.style.display = 'none';
+                }
+            }
+
+            updatePerformanceStats(latency) {
+                this.latencies.push(latency);
+                
+                this.lastLatency.textContent = `${latency.toFixed(2)}s`;
+                
+                const avgLatency = this.latencies.reduce((sum, lat) => sum + lat, 0) / this.latencies.length;
+                this.avgLatency.textContent = `${avgLatency.toFixed(2)}s`;
+                
+                const fastestLatency = Math.min(...this.latencies);
+                this.fastestLatency.textContent = `${fastestLatency.toFixed(2)}s`;
+                
+                const slowestLatency = Math.max(...this.latencies);
+                this.slowestLatency.textContent = `${slowestLatency.toFixed(2)}s`;
+                
+                this.performanceStats.style.display = 'block';
+            }
+
+            async clearConversation() {
+                const confirm = window.confirm('Apakah Anda yakin ingin memulai sesi terapi baru? Percakapan sebelumnya akan dihapus.');
+                if (!confirm) return;
+
+                try {
+                    if (this.sessionId) {
+                        await fetch(`/session/${this.sessionId}`, {
+                            method: 'DELETE'
+                        });
+                    }
+                    
+                    this.conversation.innerHTML = '';
+                    this.sessionId = null;
+                    this.messageCount = 0;
+                    this.latencies = [];
+                    this.startTime = null;
+                    this.welcomePlayed = false; // Reset welcome message flag
+                    
+                    this.lastLatency.textContent = '-';
+                    this.avgLatency.textContent = '-';
+                    this.fastestLatency.textContent = '-';
+                    this.slowestLatency.textContent = '-';
+                    this.performanceStats.style.display = 'none';
+                    
+                    this.updateSessionInfo();
+                    
+                    // Play welcome message again for new session
+                    if (this.audioEnabled) {
+                        await this.showWelcomeMessage();
+                        this.welcomePlayed = true;
+                    } else {
+                        // If audio not enabled, show prompt again
+                        this.status.textContent = '🔊 Klik di mana saja untuk mengaktifkan audio dan mendengar sambutan dari Kak Indira';
+                        this.status.className = 'status idle';
+                    }
+                    
+                } catch (error) {
+                    this.showError('Gagal menghapus sesi: ' + error.message);
+                }
+            }
+
+            async showCrisisResources() {
+                try {
+                    // Since we removed these endpoints, provide static resources
+                    let resourceText = `🚨 SUMBER BANTUAN KRISIS MENTAL:
+
+📞 HOTLINE DARURAT:
+• Halo Jiwa: 021-500-454 (24 jam)
+• Yayasan Pulih: 021-788-42580
+• Sehat Jiwa: 119 ext. 8
+
+🚑 LAYANAN DARURAT:
+• Polisi: 110
+• Ambulans: 118
+
+⚠️ PENTING: Jika Anda mengalami pikiran untuk menyakiti diri sendiri atau orang lain, segera hubungi layanan darurat atau datangi rumah sakit terdekat.`;
+
+                    await this.addMessage(resourceText, 'assistant');
+                    
+                } catch (error) {
+                    this.showError('Gagal mengambil sumber bantuan: ' + error.message);
+                }
+            }
+
+            async showTherapyTips() {
+                try {
+                    // Provide static therapy tips
+                    let tipsText = `💡 TIPS KESEHATAN MENTAL SEHARI-HARI:
+
+🌟 PRAKTIK HARIAN:
+• Dzikir dan doa untuk ketenangan jiwa
+• Bersyukur atas nikmat yang diterima
+• Silaturahmi dengan keluarga dan teman
+• Olahraga ringan atau jalan pagi
+• Membaca Al-Quran atau buku motivasi
+• Meditasi atau refleksi diri
+
+🛡️ STRATEGI COPING:
+• Teknik pernapasan dalam (4-4-4)
+• Journaling atau menulis perasaan
+• Mendengarkan musik yang menenangkan
+• Mencari dukungan dari komunitas
+• Berkonsultasi dengan ustadz/kyai jika diperlukan
+
+👨‍👩‍👧‍👦 DUKUNGAN KELUARGA:
+• Komunikasi terbuka dengan keluarga
+• Menghormati peran orang tua dan sesepuh
+• Menjaga hubungan baik dengan saudara
+• Meminta doa dan dukungan keluarga
+
+🕊️ BIMBINGAN SPIRITUAL:
+• Sabar dalam menghadapi cobaan
+• Tawakal kepada Allah SWT
+• Berhusnudzon (berprasangka baik)
+• Istighfar dan taubat nasuha
+• Shalat tahajud untuk ketenangan jiwa
+
+Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar dan bersyukur dalam setiap langkah.`;
+
+                    await this.addMessage(tipsText, 'assistant');
+                    
+                } catch (error) {
+                    this.showError('Gagal mengambil tips terapi: ' + error.message);
+                }
+            }
+
+            showLoading(show) {
+                this.loading.classList.toggle('show', show);
+            }
+
+            showError(message) {
+                this.error.textContent = message;
+                this.error.classList.add('show');
+                
+                setTimeout(() => {
+                    this.error.classList.remove('show');
+                }, 8000);
+            }
+        }
+
+        // Initialize the mental health bot when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new IndonesianMentalHealthBot();
+        });
+    </script>
+</body>
+</html> 

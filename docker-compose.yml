@@ -1,0 +1,38 @@
+services:
+  mental-health-bot:
+    build: .
+    container_name: kak-indira-mental-health-bot
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Jakarta
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount static directory for audio files storage
+      - ./static:/app/static
+      # Optional: mount templates for development
+      - ./templates:/app/templates
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 45s
+    networks:
+      - mental-health-network
+    labels:
+      - "app=kak-indira-mental-health-bot"
+      - "service=indonesian-mental-health-support"
+      - "version=1.0.0"
+
+networks:
+  mental-health-network:
+    driver: bridge
+    name: mental-health-network
+
+volumes:
+  static-data:
+    name: mental-health-static-data 

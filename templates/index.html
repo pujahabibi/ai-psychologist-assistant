@@ -211,47 +211,7 @@
             background: rgba(209, 52, 49, 0.8);
         }
 
-        .performance-stats {
-            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px 0;
-            display: none;
-        }
 
-        .performance-stats h4 {
-            margin: 0 0 15px 0;
-            color: #2d3436;
-            font-size: 1.1em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            font-size: 0.9em;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 12px;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-value {
-            font-weight: bold;
-            color: #00b894;
-            font-size: 1.2em;
-        }
-
-        .stat-label {
-            color: #636e72;
-            font-size: 0.85em;
-            margin-top: 5px;
-        }
 
         .loading {
             display: none;
@@ -413,15 +373,7 @@
                 font-size: 24px;
             }
 
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
 
-            .stat-item {
-                padding: 10px;
-                font-size: 0.8em;
-            }
 
             .therapy-actions {
                 flex-direction: column;
@@ -473,27 +425,7 @@
             <p>🔄 <span id="contextInfo">Informasi sesi akan muncul di sini</span></p>
         </div>
 
-        <div class="performance-stats" id="performanceStats">
-            <h4>📊 Statistik Respons Terapi</h4>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="lastLatency">-</div>
-                    <div class="stat-label">Respons Terakhir</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="avgLatency">-</div>
-                    <div class="stat-label">Rata-rata</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="fastestLatency">-</div>
-                    <div class="stat-label">Tercepat</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="slowestLatency">-</div>
-                    <div class="stat-label">Terlambat</div>
-                </div>
-            </div>
-        </div>
+
 
         <div class="controls">
             <button class="record-btn" id="recordBtn">🔊</button>
@@ -523,7 +455,6 @@
                 this.sessionId = null;
                 this.messageCount = 0;
                 this.startTime = null;
-                this.latencies = [];
                 this.audioEnabled = false;
                 this.welcomePlayed = false;
                 
@@ -537,11 +468,6 @@
                 this.error = document.getElementById('error');
                 this.sessionInfo = document.getElementById('sessionInfo');
                 this.contextInfo = document.getElementById('contextInfo');
-                this.performanceStats = document.getElementById('performanceStats');
-                this.lastLatency = document.getElementById('lastLatency');
-                this.avgLatency = document.getElementById('avgLatency');
-                this.fastestLatency = document.getElementById('fastestLatency');
-                this.slowestLatency = document.getElementById('slowestLatency');
                 
                 this.initEventListeners();
                 this.initializeAudioAndWelcome();
@@ -765,8 +691,6 @@ Kapan Anda siap untuk mulai berbicara?`;
                         
                         await this.addMessage(data.ai_response, 'assistant', data.audio_url, latency);
                         
-                        this.updatePerformanceStats(latency);
-                        
                     } else {
                         this.showError(data.error || 'Terjadi kesalahan dalam memproses permintaan Anda.');
                     }
@@ -869,22 +793,7 @@ Kapan Anda siap untuk mulai berbicara?`;
                 }
             }
 
-            updatePerformanceStats(latency) {
-                this.latencies.push(latency);
-                
-                this.lastLatency.textContent = `${latency.toFixed(2)}s`;
-                
-                const avgLatency = this.latencies.reduce((sum, lat) => sum + lat, 0) / this.latencies.length;
-                this.avgLatency.textContent = `${avgLatency.toFixed(2)}s`;
-                
-                const fastestLatency = Math.min(...this.latencies);
-                this.fastestLatency.textContent = `${fastestLatency.toFixed(2)}s`;
-                
-                const slowestLatency = Math.max(...this.latencies);
-                this.slowestLatency.textContent = `${slowestLatency.toFixed(2)}s`;
-                
-                this.performanceStats.style.display = 'block';
-            }
+
 
             async clearConversation() {
                 const confirm = window.confirm('Apakah Anda yakin ingin memulai sesi terapi baru? Percakapan sebelumnya akan dihapus.');
@@ -900,15 +809,8 @@ Kapan Anda siap untuk mulai berbicara?`;
                     this.conversation.innerHTML = '';
                     this.sessionId = null;
                     this.messageCount = 0;
-                    this.latencies = [];
                     this.startTime = null;
                     this.welcomePlayed = false; // Reset welcome message flag
-                    
-                    this.lastLatency.textContent = '-';
-                    this.avgLatency.textContent = '-';
-                    this.fastestLatency.textContent = '-';
-                    this.slowestLatency.textContent = '-';
-                    this.performanceStats.style.display = 'none';
                     
                     this.updateSessionInfo();
                     

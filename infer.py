@@ -2,7 +2,8 @@
 """
 Indonesian Mental Health Support Chatbot
 Provides culturally sensitive, therapeutic-grade voice conversations
-with real-time speech processing capabilities.
+with real-time speech processing capabilities, intent analysis,
+therapeutic interventions, and comprehensive safety mechanisms.
 """
 
 import io
@@ -13,10 +14,17 @@ import pyaudio
 import wave
 from openai import OpenAI
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import pygame
 import re
+from datetime import datetime
 from dotenv import load_dotenv
+from dataclasses import dataclass, asdict
+
+# Import new therapeutic capabilities
+from intent_analysis import IntentAnalyzer, IntentAnalysisResult
+from therapeutic_capabilities import TherapeuticCapabilities, TherapeuticResponse
+from safety_mechanisms import SafetyMechanisms, SafetyAssessment, ContentFilterResult
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,7 +51,7 @@ class IndonesianMentalHealthBot:
     """
     
     def __init__(self, api_key: str = None):
-        """Initialize the mental health chatbot"""
+        """Initialize the mental health chatbot with advanced therapeutic capabilities"""
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OpenAI API key is required. Please provide an API key in .env file or set OPENAI_API_KEY environment variable.")
@@ -73,8 +81,25 @@ class IndonesianMentalHealthBot:
         # Indonesian mental health system prompt
         self.system_prompt = self._create_system_prompt()
         
+        # Initialize therapeutic capabilities
+        try:
+            self.intent_analyzer = IntentAnalyzer(api_key=self.api_key)
+            self.therapeutic_capabilities = TherapeuticCapabilities(api_key=self.api_key)
+            self.safety_mechanisms = SafetyMechanisms(api_key=self.api_key)
+            print("🧠 Advanced therapeutic capabilities initialized")
+        except Exception as e:
+            print(f"Warning: Therapeutic capabilities initialization failed: {e}")
+            self.intent_analyzer = None
+            self.therapeutic_capabilities = None
+            self.safety_mechanisms = None
+        
+        # Session tracking for enhanced capabilities
+        self.session_metadata = {}
+        self.session_consent_records = {}
+        
         print("🧠 Indonesian Mental Health Support Bot initialized")
         print("💚 Siap membantu kesehatan mental Anda dengan pendekatan yang sensitif budaya")
+        print("🔒 Dilengkapi dengan sistem keamanan dan analisis intent yang canggih")
 
     def _create_system_prompt(self) -> str:
         """Create culturally sensitive system prompt"""
@@ -120,13 +145,19 @@ RESPONS ANDA:
 Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memahami perasaan mereka, dan menguatkan resiliensi mereka dengan cara yang sesuai dengan budaya Indonesia."""
 
     def _get_therapeutic_response(self, user_input: str, session_id: str) -> str:
-        """Generate therapeutic response using GPT-4"""
+        """Generate therapeutic response using advanced therapeutic capabilities"""
         try:
             # Get or create conversation history
             if session_id not in self.conversations:
                 self.conversations[session_id] = []
             
             conversation = self.conversations[session_id]
+            
+            # Content filtering for safety
+            if self.safety_mechanisms:
+                content_filter_result = self.safety_mechanisms.filter_content(user_input, session_id)
+                if content_filter_result.blocked_content:
+                    return content_filter_result.warning_message or "Maaf, saya tidak dapat memproses permintaan ini. Mari fokus pada dukungan kesehatan mental."
             
             # Add user input to conversation
             conversation.append({"role": "user", "content": user_input})
@@ -135,29 +166,59 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             if len(conversation) > self.max_conversation_length:
                 conversation = conversation[-self.trim_to_length:]
             
-            # Prepare messages for API
-            messages = [{"role": "system", "content": self.system_prompt}]
-            messages.extend(conversation)
+            # Intent analysis for enhanced understanding
+            intent_result = None
+            if self.intent_analyzer:
+                try:
+                    intent_result = self.intent_analyzer.analyze_intent(user_input, conversation)
+                    print(f"🔍 Intent Analysis: {intent_result.primary_emotion.value} emotion, {intent_result.therapeutic_context.value} context")
+                except Exception as e:
+                    print(f"Warning: Intent analysis failed: {e}")
             
-            # Generate response using new client format
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-nano",
-                messages=messages,
-                max_tokens=300,
-                temperature=0.7,
-                presence_penalty=0.1,
-                frequency_penalty=0.1
-            )
+            # Safety assessment
+            safety_assessment = None
+            if self.safety_mechanisms and intent_result:
+                try:
+                    safety_assessment = self.safety_mechanisms.assess_safety(user_input, intent_result, conversation, session_id)
+                    print(f"🔒 Safety Assessment: {safety_assessment.alert_level.value} alert level")
+                    
+                    # Store session metadata
+                    self.session_metadata[session_id] = {
+                        "last_safety_assessment": safety_assessment,
+                        "last_intent_analysis": intent_result,
+                        "total_interactions": len(conversation)
+                    }
+                except Exception as e:
+                    print(f"Warning: Safety assessment failed: {e}")
             
-            ai_response = response.choices[0].message.content.strip()
+            # Generate therapeutic response using advanced capabilities
+            if self.therapeutic_capabilities and intent_result:
+                try:
+                    therapeutic_response = self.therapeutic_capabilities.generate_therapeutic_response(
+                        user_input, intent_result, conversation, session_id
+                    )
+                    
+                    # Add AI response to conversation
+                    conversation.append({"role": "assistant", "content": therapeutic_response.response_text})
+                    
+                    # Update conversation history
+                    self.conversations[session_id] = conversation
+                    
+                    # Handle crisis escalation
+                    if therapeutic_response.crisis_escalation and safety_assessment:
+                        crisis_message = self._handle_crisis_escalation(safety_assessment)
+                        if crisis_message:
+                            return f"{therapeutic_response.response_text}\n\n{crisis_message}"
+                    
+                    return therapeutic_response.response_text
+                    
+                except Exception as e:
+                    print(f"Warning: Therapeutic response generation failed: {e}")
+                    # Fall back to basic response
+                    return self._generate_basic_response(user_input, conversation)
             
-            # Add AI response to conversation
-            conversation.append({"role": "assistant", "content": ai_response})
-            
-            # Update conversation history
-            self.conversations[session_id] = conversation
-            
-            return ai_response
+            # Fallback to basic response if advanced capabilities unavailable
+            return self._generate_basic_response(user_input, conversation)
             
         except Exception as e:
             print(f"Error in therapeutic response: {e}")
@@ -317,6 +378,130 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
                 "error": error_msg,
                 "session_id": session_id
             }
+
+    def _generate_basic_response(self, user_input: str, conversation: List[Dict]) -> str:
+        """Generate basic therapeutic response as fallback"""
+        try:
+            # Prepare messages for API
+            messages = [{"role": "system", "content": self.system_prompt}]
+            messages.extend(conversation)
+            
+            # Generate response using new client format
+            response = self.client.chat.completions.create(
+                model="gpt-4.1-mini",
+                messages=messages,
+                max_tokens=250,
+                temperature=0.7,
+                presence_penalty=0.1,
+                frequency_penalty=0.1
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            print(f"Error in basic response generation: {e}")
+            return "Saya mendengar Anda. Bisakah Anda ceritakan lebih lanjut tentang perasaan Anda?"
+    
+    def _handle_crisis_escalation(self, safety_assessment: SafetyAssessment) -> Optional[str]:
+        """Handle crisis escalation based on safety assessment"""
+        if not safety_assessment.emergency_contact:
+            return None
+        
+        crisis_message = "\n⚠️ PENTING - BANTUAN DARURAT:"
+        
+        if safety_assessment.alert_level.value == "red":
+            crisis_message += "\n🚨 Hubungi segera: 119 (Pencegahan Bunuh Diri)"
+            crisis_message += "\n🏥 Atau: 118 (Gawat Darurat)"
+            crisis_message += "\n👮 Jika dalam bahaya: 110 (Polisi)"
+        elif safety_assessment.alert_level.value == "orange":
+            crisis_message += "\n📞 Hubungi: 500-454 (Crisis Mental Health)"
+            crisis_message += "\n🆘 Atau: 119 (Pencegahan Bunuh Diri)"
+        
+        crisis_message += "\n\n💙 Anda tidak sendirian. Bantuan tersedia 24/7."
+        
+        return crisis_message
+    
+    def get_session_analysis(self, session_id: str) -> Dict[str, Any]:
+        """Get comprehensive session analysis"""
+        if session_id not in self.session_metadata:
+            return {"error": "Session not found"}
+        
+        metadata = self.session_metadata[session_id]
+        analysis = {
+            "session_id": session_id,
+            "total_interactions": metadata.get("total_interactions", 0),
+            "last_update": datetime.now().isoformat()
+        }
+        
+        # Add safety assessment info
+        if "last_safety_assessment" in metadata:
+            safety = metadata["last_safety_assessment"]
+            analysis["safety_status"] = {
+                "alert_level": safety.alert_level.value,
+                "risk_factors_count": len(safety.risk_factors),
+                "requires_escalation": safety.referral_needed,
+                "emergency_contact": safety.emergency_contact
+            }
+        
+        # Add intent analysis info
+        if "last_intent_analysis" in metadata:
+            intent = metadata["last_intent_analysis"]
+            analysis["intent_status"] = {
+                "primary_emotion": intent.primary_emotion.value,
+                "therapeutic_context": intent.therapeutic_context.value,
+                "emotion_intensity": intent.emotion_intensity,
+                "confidence_score": intent.confidence_score
+            }
+        
+        return analysis
+    
+    def create_session_consent(self, session_id: str, ip_address: str, consent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create session consent record"""
+        if not self.safety_mechanisms:
+            return {"error": "Safety mechanisms not available"}
+        
+        try:
+            consent_record = self.safety_mechanisms.create_session_consent(session_id, ip_address, consent_data)
+            self.session_consent_records[session_id] = consent_record
+            return {
+                "success": True,
+                "session_id": session_id,
+                "consent_timestamp": consent_record.consent_timestamp.isoformat(),
+                "retention_period": consent_record.retention_period
+            }
+        except Exception as e:
+            return {"error": f"Failed to create consent record: {e}"}
+    
+    def get_crisis_resources(self) -> Dict[str, Any]:
+        """Get crisis resources and emergency contacts"""
+        resources = {
+            "emergency_contacts": {
+                "suicide_prevention": "119",
+                "medical_emergency": "118",
+                "police": "110",
+                "mental_health_crisis": "500-454",
+                "women_crisis": "021-7270005",
+                "child_protection": "129"
+            },
+            "professional_resources": {
+                "psychiatrist": "Dokter Spesialis Jiwa",
+                "psychologist": "Psikolog Klinis",
+                "counselor": "Konselor Berlisensi",
+                "community_health": "Puskesmas"
+            },
+            "online_resources": [
+                "https://www.sehatjiwa.id",
+                "https://www.halodoc.com (Konsultasi Online)",
+                "https://www.alodokter.com (Psikologi Online)"
+            ]
+        }
+        
+        # Add resources from safety mechanisms if available
+        if self.safety_mechanisms:
+            resources["detailed_emergency"] = self.safety_mechanisms.get_crisis_resources()
+            resources["cultural_resources"] = self.safety_mechanisms.get_cultural_resources()
+        
+        return resources
 
     def cleanup(self):
         """Clean up resources"""

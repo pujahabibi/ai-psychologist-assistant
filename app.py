@@ -271,6 +271,181 @@ async def list_sessions():
         "total_sessions": len(bot.conversations)
     }
 
+@app.get("/session-analysis/{session_id}")
+async def get_session_analysis(session_id: str):
+    """Get comprehensive session analysis including intent and safety assessment"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        analysis = bot.get_session_analysis(session_id)
+        if "error" in analysis:
+            raise HTTPException(status_code=404, detail=analysis["error"])
+        return analysis
+    except Exception as e:
+        logger.error(f"Error getting session analysis: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/session-consent")
+async def create_session_consent(
+    session_id: str = Form(...),
+    ip_address: str = Form(...),
+    consent_given: bool = Form(True),
+    recording_consent: bool = Form(False),
+    data_sharing_consent: bool = Form(False),
+    anonymization_level: str = Form("high"),
+    retention_period: int = Form(30)
+):
+    """Create session consent record for data protection compliance"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        consent_data = {
+            "consent_given": consent_given,
+            "recording_consent": recording_consent,
+            "data_sharing_consent": data_sharing_consent,
+            "anonymization_level": anonymization_level,
+            "retention_period": retention_period
+        }
+        
+        result = bot.create_session_consent(session_id, ip_address, consent_data)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error creating session consent: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/crisis-resources")
+async def get_crisis_resources():
+    """Get crisis resources and emergency contacts"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        resources = bot.get_crisis_resources()
+        return resources
+    except Exception as e:
+        logger.error(f"Error getting crisis resources: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/intent-analysis")
+async def analyze_intent(request: TextRequest):
+    """Analyze user input for emotional state and therapeutic context"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    if not bot.intent_analyzer:
+        raise HTTPException(status_code=503, detail="Intent analyzer not available")
+    
+    try:
+        session_id = request.session_id or str(uuid.uuid4())
+        conversation_history = bot.conversations.get(session_id, [])
+        
+        intent_result = bot.intent_analyzer.analyze_intent(request.text, conversation_history)
+        
+        # Format the result for JSON response
+        result = {
+            "primary_emotion": intent_result.primary_emotion.value,
+            "secondary_emotions": [emotion.value for emotion in intent_result.secondary_emotions],
+            "emotion_intensity": intent_result.emotion_intensity,
+            "therapeutic_context": intent_result.therapeutic_context.value,
+            "suggested_approach": intent_result.suggested_approach,
+            "suicide_risk": intent_result.suicide_risk.value,
+            "self_harm_risk": intent_result.self_harm_risk.value,
+            "crisis_indicators": intent_result.crisis_indicators,
+            "cultural_factors": intent_result.cultural_factors,
+            "spiritual_elements": intent_result.spiritual_elements,
+            "cbt_techniques": intent_result.cbt_techniques,
+            "intervention_priority": intent_result.intervention_priority,
+            "session_goals": intent_result.session_goals,
+            "confidence_score": intent_result.confidence_score,
+            "requires_escalation": intent_result.requires_escalation,
+            "emergency_contact_needed": intent_result.emergency_contact_needed,
+            "timestamp": intent_result.timestamp.isoformat(),
+            "session_id": session_id
+        }
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error in intent analysis: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/safety-assessment")
+async def assess_safety(request: TextRequest):
+    """Perform safety assessment for user input"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    if not bot.safety_mechanisms or not bot.intent_analyzer:
+        raise HTTPException(status_code=503, detail="Safety mechanisms not available")
+    
+    try:
+        session_id = request.session_id or str(uuid.uuid4())
+        conversation_history = bot.conversations.get(session_id, [])
+        
+        # First get intent analysis
+        intent_result = bot.intent_analyzer.analyze_intent(request.text, conversation_history)
+        
+        # Then perform safety assessment
+        safety_assessment = bot.safety_mechanisms.assess_safety(
+            request.text, intent_result, conversation_history, session_id
+        )
+        
+        # Format the result for JSON response
+        result = {
+            "alert_level": safety_assessment.alert_level.value,
+            "risk_factors": safety_assessment.risk_factors,
+            "protective_factors": safety_assessment.protective_factors,
+            "immediate_actions": safety_assessment.immediate_actions,
+            "referral_needed": safety_assessment.referral_needed,
+            "referral_triggers": [trigger.value for trigger in safety_assessment.referral_triggers],
+            "emergency_contact": safety_assessment.emergency_contact,
+            "session_monitoring": safety_assessment.session_monitoring,
+            "data_protection_notes": safety_assessment.data_protection_notes,
+            "timestamp": safety_assessment.timestamp.isoformat(),
+            "session_id": session_id
+        }
+        
+        # Add emergency response plan if needed
+        if safety_assessment.alert_level.value in ["orange", "red"]:
+            emergency_plan = bot.safety_mechanisms.get_emergency_response_plan(safety_assessment)
+            result["emergency_response_plan"] = emergency_plan
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error in safety assessment: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/therapeutic-response")
+async def get_therapeutic_response_enhanced(request: TextRequest):
+    """Get therapeutic response with full analysis and safety features"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        session_id = request.session_id or str(uuid.uuid4())
+        
+        # Get therapeutic response (this will include all analysis internally)
+        ai_response = bot._get_therapeutic_response(request.text, session_id)
+        
+        # Get session analysis if available
+        session_analysis = {}
+        if session_id in bot.session_metadata:
+            session_analysis = bot.get_session_analysis(session_id)
+        
+        return {
+            "response": ai_response,
+            "session_id": session_id,
+            "session_analysis": session_analysis
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting therapeutic response: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 

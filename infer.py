@@ -20,6 +20,8 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 from dataclasses import dataclass, asdict
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 # Import new therapeutic capabilities
 from intent_analysis import IntentAnalyzer, IntentAnalysisResult
@@ -235,6 +237,7 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             transcript = self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
+                prompt="",
                 language="id"  # Indonesian language code
             )
             
@@ -251,7 +254,7 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
                 model="gpt-4o-mini-tts",
                 voice="alloy",  # Works well for Indonesian
                 input=text,
-                response_format="mp3"
+                response_format="mp3",
             )
             
             return response.content
@@ -510,6 +513,174 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
         
         if PYGAME_AVAILABLE:
             pygame.mixer.quit()
+
+    async def optimized_therapeutic_response(self, user_input: str, session_id: str) -> str:
+        """Parallel processing for faster response"""
+        
+        # Start multiple tasks concurrently
+        tasks = []
+        
+        # Task 1: Intent Analysis (can start immediately)
+        intent_task = asyncio.create_task(
+            self._async_intent_analysis(user_input, session_id)
+        )
+        
+        # Task 2: Quick safety patterns (lightweight, immediate)
+        safety_patterns_task = asyncio.create_task(
+            self._quick_safety_patterns(user_input)
+        )
+        
+        # Wait for quick results
+        quick_safety = await safety_patterns_task
+        
+        # If immediate crisis detected, skip full analysis
+        if quick_safety.get('immediate_crisis'):
+            return self._generate_crisis_response(quick_safety)
+        
+        # Continue with full analysis
+        intent_result = await intent_task
+        
+        # Parallel: Safety Assessment + Response Generation
+        safety_task = asyncio.create_task(
+            self._async_safety_assessment(user_input, intent_result, session_id)
+        )
+        
+        response_task = asyncio.create_task(
+            self._async_therapeutic_response(user_input, intent_result, session_id)
+        )
+        
+        # Wait for both
+        safety_result, therapeutic_response = await asyncio.gather(
+            safety_task, response_task
+        )
+        
+        # Handle crisis escalation if needed
+        if safety_result.emergency_contact_needed:
+            return self._add_crisis_info(therapeutic_response, safety_result)
+        
+        return therapeutic_response
+
+    async def stream_therapeutic_response(self, user_input: str, intent_result: IntentAnalysisResult):
+        """Stream response as it's generated"""
+        
+        response = await self.client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=self._prepare_messages(user_input, intent_result),
+            max_tokens=200,  # Reduced for speed
+            temperature=0.7,
+            stream=True  # Enable streaming
+        )
+        
+        full_response = ""
+        async for chunk in response:
+            if chunk.choices[0].delta.content:
+                chunk_text = chunk.choices[0].delta.content
+                full_response += chunk_text
+                
+                # Send partial response to frontend
+                yield {
+                    "type": "partial_response",
+                    "content": chunk_text,
+                    "full_so_far": full_response
+                }
+        
+        # Send final response
+        yield {
+            "type": "final_response", 
+            "content": full_response,
+            "start_tts": True  # Signal to start TTS
+        }
+
+    async def progressive_tts(self, text_stream):
+        """Generate TTS for complete sentences as they arrive"""
+        
+        sentence_buffer = ""
+        sentence_endings = ['.', '!', '?', '\n']
+        
+        async for chunk in text_stream:
+            sentence_buffer += chunk
+            
+            # Check if we have a complete sentence
+            if any(ending in sentence_buffer for ending in sentence_endings):
+                sentences = self._split_sentences(sentence_buffer)
+                
+                for complete_sentence in sentences[:-1]:  # All but last
+                    # Generate TTS for complete sentence
+                    audio_chunk = await self._quick_tts(complete_sentence)
+                    yield {
+                        "type": "audio_chunk",
+                        "audio": audio_chunk,
+                        "text": complete_sentence
+                    }
+                
+                # Keep incomplete sentence in buffer
+                sentence_buffer = sentences[-1] if sentences else ""
+
+    async def voice_therapy_optimized(self, audio_data: bytes, session_id: str):
+        """Optimized voice therapy with parallel processing"""
+        
+        # Step 1: Speech-to-Text (must be first)
+        user_text = await self._async_speech_to_text(audio_data)
+        
+        # Step 2: Start response generation
+        response_task = asyncio.create_task(
+            self.optimized_therapeutic_response(user_text, session_id)
+        )
+        
+        # Step 3: Get response text
+        ai_response = await response_task
+        
+        # Step 4: Start TTS immediately (don't wait for UI update)
+        tts_task = asyncio.create_task(
+            self._async_text_to_speech(ai_response)
+        )
+        
+        # Return text immediately, audio will follow
+        return {
+            "user_text": user_text,
+            "ai_response": ai_response,
+            "audio_task": tts_task  # Let frontend handle this
+        }
+
+class ResponseCache:
+    def __init__(self):
+        self.intent_cache = {}
+        self.response_templates = {}
+        self.common_patterns = self._load_common_patterns()
+    
+    def _load_common_patterns(self):
+        return {
+            "greeting": {
+                "patterns": ["halo", "hai", "selamat", "assalamualaikum"],
+                "response": "Halo! Saya Kak Indira. Apa yang ingin Anda ceritakan hari ini?",
+                "intent": {"emotion": "neutral", "context": "general_support"}
+            },
+            "anxiety_light": {
+                "patterns": ["cemas", "khawatir", "takut", "nervous"],
+                "response_template": "anxiety_management_basic",
+                "intent": {"emotion": "anxious", "context": "anxiety_management"}
+            },
+            "gratitude": {
+                "patterns": ["terima kasih", "thanks", "syukur"],
+                "response": "Sama-sama. Saya senang bisa membantu Anda.",
+                "intent": {"emotion": "grateful", "context": "general_support"}
+            }
+        }
+    
+    async def quick_response_check(self, user_input: str) -> Optional[dict]:
+        """Check for common patterns that don't need full analysis"""
+        user_lower = user_input.lower()
+        
+        for pattern_name, pattern_data in self.common_patterns.items():
+            for pattern in pattern_data["patterns"]:
+                if pattern in user_lower:
+                    return {
+                        "response": pattern_data["response"],
+                        "intent": pattern_data["intent"],
+                        "cached": True,
+                        "pattern": pattern_name
+                    }
+        return None
 
 def main():
     """Main function for testing"""

@@ -140,7 +140,7 @@ BATASAN ETIS:
 RESPONS ANDA:
 - Maksimal 3-4 kalimat per respons
 - Fokus pada satu tema atau pertanyaan per waktu
-- Akhiri dengan pertanyaan terbuka untuk mendorong eksplorasi lebih lanjut
+- Pada setiap respons, Anda harus bisa menentukan apakah pengguna memerlukan pertanyaan terbuka lebih lanjut, memberikan solusi, atau menyudahi sesi.
 - Gunakan nada yang menenangkan dan mendukung
 - Jika pengguna sudah merasa lebih baik atau masalahnya sudah teratasi, jangan memaksa pengguna untuk terus berbicara. tutup sesi dengan mengatakan "Terima kasih telah berbicara dengan saya. Semoga hari Anda menyenangkan!"
 
@@ -231,13 +231,18 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
         try:
             # Create a temporary file-like object
             audio_file = io.BytesIO(audio_data)
-            audio_file.name = "temp_audio.wav"
+            audio_file.name = "temp_audio.mp3"
             
             # Transcribe using Whisper with new client format
             transcript = self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                prompt="",
+                chunking_strategy={
+    "type": "server_vad",
+    "prefix_padding_ms": 100,
+    "silence_duration_ms": 30,
+    "threshold": 0.1
+},
                 language="id"  # Indonesian language code
             )
             

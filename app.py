@@ -135,8 +135,12 @@ async def voice_therapy(
         # Get therapeutic response
         ai_response = bot._get_therapeutic_response(user_text, session_id)
         
-        # Convert response to speech
-        audio_response = bot.text_to_speech(ai_response)
+        # Convert response to speech using parallel processing
+        response_length = len(ai_response)
+        if response_length < 100:
+            audio_response = bot.text_to_speech(ai_response)
+        else:
+            audio_response = await bot.text_to_speech_parallel(ai_response)
         
         # Save audio response to file
         audio_url = None
@@ -209,12 +213,28 @@ async def get_therapy_response(request: TextRequest):
 
 @app.post("/text-to-speech")
 async def text_to_speech_endpoint(request: TextRequest):
-    """Convert text to speech using OpenAI TTS"""
+    """Convert text to speech using OpenAI TTS with parallel processing"""
     if not bot:
         raise HTTPException(status_code=503, detail="Bot not initialized")
     
     try:
-        audio_data = bot.text_to_speech(request.text)
+        start_time = time.time()
+        
+        # Choose TTS method based on text length
+        text_length = len(request.text)
+        
+        if text_length < 100:
+            # Use regular TTS for short texts
+            audio_data = bot.text_to_speech(request.text)
+            method_used = "synchronous"
+        elif text_length < 1000:
+            # Use parallel TTS for medium texts
+            audio_data = await bot.text_to_speech_parallel(request.text)
+            method_used = "parallel"
+        else:
+            # Use parallel TTS with more workers for long texts
+            audio_data = await bot.text_to_speech_parallel(request.text, max_workers=8)
+            method_used = "parallel_extended"
         
         if not audio_data:
             raise HTTPException(status_code=500, detail="Could not generate audio")
@@ -226,13 +246,99 @@ async def text_to_speech_endpoint(request: TextRequest):
         async with aiofiles.open(audio_path, "wb") as f:
             await f.write(audio_data)
         
+        processing_time = time.time() - start_time
+        
         return {
             "audio_url": f"/static/{audio_filename}",
-            "text": request.text
+            "text": request.text,
+            "processing_time": round(processing_time, 2),
+            "method_used": method_used,
+            "text_length": text_length,
+            "performance_gain": f"{round(text_length / processing_time, 2)} chars/sec"
         }
         
     except Exception as e:
         logger.error(f"Error in text-to-speech: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/text-to-speech-streaming")
+async def text_to_speech_streaming_endpoint(request: TextRequest):
+    """Stream text-to-speech audio chunks as they become available"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        from fastapi.responses import StreamingResponse
+        import json
+        
+        async def generate_audio_stream():
+            """Generate streaming audio chunks"""
+            chunk_count = 0
+            
+            # Send initial metadata
+            metadata = {
+                "type": "metadata",
+                "text": request.text,
+                "text_length": len(request.text),
+                "estimated_chunks": len(bot._split_text_into_sentences(request.text))
+            }
+            yield f"data: {json.dumps(metadata)}\n\n"
+            
+            # Stream audio chunks
+            async for chunk_data in bot.text_to_speech_streaming(request.text):
+                chunk_count += 1
+                
+                # Save chunk to file
+                audio_filename = f"tts_chunk_{uuid.uuid4().hex}.mp3"
+                audio_path = static_dir / audio_filename
+                
+                async with aiofiles.open(audio_path, "wb") as f:
+                    await f.write(chunk_data["audio"])
+                
+                # Send chunk information
+                chunk_info = {
+                    "type": "audio_chunk",
+                    "chunk_id": chunk_data["chunk_id"],
+                    "audio_url": f"/static/{audio_filename}",
+                    "text": chunk_data["text"],
+                    "total_chunks": chunk_data["total_chunks"],
+                    "progress": round((chunk_data["chunk_id"] + 1) / chunk_data["total_chunks"] * 100, 2)
+                }
+                yield f"data: {json.dumps(chunk_info)}\n\n"
+            
+            # Send completion signal
+            completion = {
+                "type": "complete",
+                "total_chunks_processed": chunk_count,
+                "message": "TTS streaming completed"
+            }
+            yield f"data: {json.dumps(completion)}\n\n"
+        
+        return StreamingResponse(
+            generate_audio_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in streaming TTS: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/tts-performance-stats")
+async def get_tts_performance_stats():
+    """Get TTS performance statistics and recommendations"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        return bot.get_tts_performance_stats()
+    except Exception as e:
+        logger.error(f"Error getting TTS stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/session-info/{session_id}")

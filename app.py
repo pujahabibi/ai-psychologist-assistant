@@ -138,7 +138,7 @@ async def voice_therapy(
         # Convert response to speech using parallel processing
         response_length = len(ai_response)
         # Use parallel processing with smart worker allocation
-        if response_length <= 200:
+        if response_length <= 150:
             audio_response = await bot.text_to_speech_parallel(ai_response)
         else:
             audio_response = await bot.text_to_speech_parallel(ai_response, max_workers=8)
@@ -224,7 +224,7 @@ async def text_to_speech_endpoint(request: TextRequest):
         # Always use parallel processing regardless of text length
         text_length = len(request.text)
         
-        if text_length <= 200:
+        if text_length < 150:
             # Use parallel TTS for texts 200 characters or less
             audio_data = await bot.text_to_speech_parallel(request.text)
             method_used = "parallel"

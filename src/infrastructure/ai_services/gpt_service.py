@@ -4,7 +4,8 @@ GPT Service Implementation - OpenAI API integration for therapeutic responses
 """
 
 import time
-from typing import List, Dict, Optional
+import asyncio
+from typing import List, Dict, Optional, AsyncGenerator
 from openai import OpenAI
 from ...core.interfaces.ai_service import IGPTService
 from ...core.entities.therapeutic_response import TherapeuticResponse, EmotionType, EmotionAnalysis, SafetyAssessment, AlertLevel
@@ -72,6 +73,45 @@ class GPTService(IGPTService):
                 model_used="error",
                 processing_time=time.time() - start_time
             )
+
+    async def generate_streaming_therapeutic_response(
+        self,
+        user_input: str,
+        conversation_history: List[Dict[str, str]],
+        session_id: str,
+        system_prompt: str
+    ) -> AsyncGenerator[str, None]:
+        """Generate streaming therapeutic response using GPT"""
+        try:
+            # Prepare messages with system prompt
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(conversation_history)
+            
+            print(f"🔄 Starting streaming GPT response for session {session_id}")
+            
+            # Make streaming API call with original hyperparameters
+            response_stream = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_tokens=settings.model_config.max_tokens,
+                temperature=settings.model_config.temperature,
+                presence_penalty=settings.model_config.presence_penalty,
+                frequency_penalty=settings.model_config.frequency_penalty,
+                stream=True
+            )
+            
+            # Stream the response chunks
+            for chunk in response_stream:
+                if chunk.choices[0].delta.content is not None:
+                    content = chunk.choices[0].delta.content
+                    print(f"📤 Streaming chunk: '{content}'")
+                    yield content
+                    
+            print(f"✅ Streaming GPT response completed for session {session_id}")
+            
+        except Exception as e:
+            print(f"❌ Error in streaming GPT response generation: {e}")
+            yield "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
     
     def _analyze_emotion(self, user_input: str) -> EmotionAnalysis:
         """Simplified emotion analysis based on keywords"""

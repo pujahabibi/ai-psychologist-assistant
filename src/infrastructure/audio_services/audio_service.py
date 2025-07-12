@@ -10,7 +10,7 @@ import time
 import threading
 import tempfile
 import math
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Tuple, Dict, Any, Optional, Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 from ...core.interfaces.audio_service import IAudioService
@@ -24,6 +24,9 @@ try:
 except ImportError:
     PYDUB_AVAILABLE = False
     print("⚠️ pydub not available - audio preprocessing disabled")
+    # Create a dummy AudioSegment class for type hints
+    class AudioSegment:
+        pass
 
 
 class AudioService(IAudioService):
@@ -708,6 +711,7 @@ class AudioService(IAudioService):
             response = client.audio.speech.create(
                 model="gpt-4o-mini-tts",
                 voice="alloy",
+                instructions="Speak in a friendly and engaging tone, with a natural flow and a slight hint of warmth. Ensure you user your correct pronounciantion in Indonesian language",
                 input=text,
                 response_format="mp3"
             )

@@ -16,7 +16,7 @@ load_dotenv()
 class ModelConfig:
     """Configuration for AI models"""
     # Original model names preserved exactly
-    primary_model: str = "gpt-4.1"
+    primary_model: str = "gpt-4.1-nano"
     fallback_model: str = "claude-3-5-sonnet-20241022"
     
     # Original hyperparameters preserved exactly

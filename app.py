@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FastAPI Backend for Indonesian Mental Health Support Chatbot
+FastAPI Backend for Indonesian Mental Health Support Chatbot (Clean Architecture)
 Provides voice-based therapeutic conversations with cultural sensitivity
 """
 
@@ -20,49 +20,48 @@ import aiofiles
 from pathlib import Path
 import logging
 
-# Import our mental health bot
-from infer import IndonesianMentalHealthBot
+# Import clean architecture components
+from src.main.app import app as clean_app
+from src.core.entities.audio_data import AudioData
+from src.infrastructure.config.settings import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global bot instance
-bot = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
-    global bot
     
     # Startup
     try:
-        logger.info("🧠 Starting Indonesian Mental Health Support Bot Server")
-        logger.info("💚 Server Bot Dukungan Kesehatan Mental Indonesia")
+        logger.info("🧠 Starting Indonesian Mental Health Support Bot Server (Clean Architecture)")
+        logger.info("💚 Server Bot Dukungan Kesehatan Mental Indonesia (Arsitektur Bersih)")
         logger.info("🌐 Access the therapy interface at: http://localhost:8000")
         logger.info("📚 API Documentation available at: http://localhost:8000/docs")
         
-        bot = IndonesianMentalHealthBot()
-        logger.info("🧠 Indonesian Mental Health Support Bot initialized successfully")
+        # Clean architecture app is already initialized
+        logger.info("✅ Clean architecture application initialized successfully")
         
     except Exception as e:
-        logger.error(f"❌ Failed to initialize bot: {e}")
+        logger.error(f"❌ Failed to initialize application: {e}")
         raise
     
     yield
     
     # Shutdown
-    if bot:
-        try:
-            bot.cleanup()
-            logger.info("🧹 Bot cleanup completed")
-        except Exception as e:
-            logger.error(f"❌ Error during cleanup: {e}")
+    try:
+        clean_app.cleanup()
+        logger.info("🧹 Application cleanup completed")
+    except Exception as e:
+        logger.error(f"❌ Error during cleanup: {e}")
+
 
 app = FastAPI(
-    title="Indonesian Mental Health Support Bot",
+    title="Indonesian Mental Health Support Bot (Clean Architecture)",
     description="Voice-based therapeutic chatbot with cultural sensitivity for Indonesian users",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -89,16 +88,32 @@ class TherapyResponse(BaseModel):
     session_id: Optional[str] = None
     error: Optional[str] = None
     latency: Optional[float] = None
+    model_used: Optional[str] = None
+    alert_level: Optional[str] = None
+
 
 @app.get("/")
 async def root():
     """Serve the main therapy interface"""
     return FileResponse("templates/index.html")
 
+
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "indonesian-mental-health-bot"}
+    """Health check endpoint with clean architecture info"""
+    return {
+        "status": "healthy", 
+        "service": "indonesian-mental-health-bot",
+        "architecture": "clean",
+        "version": "2.0.0"
+    }
+
+
+@app.get("/service-status")
+async def service_status():
+    """Get service status from clean architecture"""
+    return clean_app.get_service_status()
+
 
 @app.post("/voice-therapy", response_model=TherapyResponse)
 async def voice_therapy(
@@ -109,9 +124,6 @@ async def voice_therapy(
     Complete voice therapy interaction
     Processes audio input and returns therapeutic response with audio
     """
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
     start_time = time.time()
     
     try:
@@ -122,8 +134,19 @@ async def voice_therapy(
         # Read uploaded audio file
         audio_data = await audio_file.read()
         
-        # Convert speech to text
-        user_text = bot.speech_to_text(audio_data)
+        # Create AudioData entity for clean architecture
+        audio_entity = AudioData(
+            audio_bytes=audio_data,
+            format=settings.audio_config.default_format
+        )
+        
+        # Convert speech to text using clean architecture
+        therapy_use_case = clean_app.get_therapy_use_case()
+        audio_service = clean_app.get_audio_service()
+        
+        # Speech to text
+        processed_audio = await audio_service.speech_to_text(audio_entity)
+        user_text = processed_audio.transcription
         
         if not user_text:
             return TherapyResponse(
@@ -133,24 +156,25 @@ async def voice_therapy(
             )
         
         # Get therapeutic response
-        ai_response = bot._get_therapeutic_response(user_text, session_id)
+        therapy_result = await therapy_use_case.process_text_therapy(user_text, session_id)
+        ai_response = therapy_result["response"]
         
         # Convert response to speech using parallel processing
         response_length = len(ai_response)
-        # Use parallel processing with smart worker allocation
+        # Use parallel processing with smart worker allocation (RESTORED ORIGINAL LOGIC)
         if response_length <= 150:
-            audio_response = await bot.text_to_speech_parallel(ai_response)
+            audio_response_data = await audio_service.text_to_speech_parallel(ai_response)
         else:
-            audio_response = await bot.text_to_speech_parallel(ai_response, max_workers=8)
+            audio_response_data = await audio_service.text_to_speech_parallel(ai_response, max_workers=8)
         
         # Save audio response to file
         audio_url = None
-        if audio_response:
+        if audio_response_data and audio_response_data.audio_bytes:
             audio_filename = f"therapy_response_{uuid.uuid4().hex}.mp3"
             audio_path = static_dir / audio_filename
             
             async with aiofiles.open(audio_path, "wb") as f:
-                await f.write(audio_response)
+                await f.write(audio_response_data.audio_bytes)
             
             audio_url = f"/static/{audio_filename}"
         
@@ -174,15 +198,23 @@ async def voice_therapy(
             session_id=session_id
         )
 
+
 @app.post("/speech-to-text")
 async def speech_to_text_endpoint(audio_file: UploadFile = File(...)):
     """Convert speech to text using Whisper"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
     try:
         audio_data = await audio_file.read()
-        text = bot.speech_to_text(audio_data)
+        
+        # Create AudioData entity for clean architecture
+        audio_entity = AudioData(
+            audio_bytes=audio_data,
+            format=settings.audio_config.default_format
+        )
+        
+        # Use audio service directly
+        audio_service = clean_app.get_audio_service()
+        processed_audio = await audio_service.speech_to_text(audio_entity)
+        text = processed_audio.transcription
         
         if not text:
             raise HTTPException(status_code=400, detail="Could not transcribe audio")
@@ -193,18 +225,25 @@ async def speech_to_text_endpoint(audio_file: UploadFile = File(...)):
         logger.error(f"Error in speech-to-text: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/get-therapy-response")
 async def get_therapy_response(request: TextRequest):
     """Get therapeutic response from text input"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
     try:
         session_id = request.session_id or str(uuid.uuid4())
-        response = bot._get_therapeutic_response(request.text, session_id)
+        
+        # Use clean architecture use case
+        therapy_use_case = clean_app.get_therapy_use_case()
+        result = await therapy_use_case.process_text_therapy(
+            request.text, 
+            session_id
+        )
+        
+        if not result["success"]:
+            raise HTTPException(status_code=500, detail=result["error"])
         
         return {
-            "response": response,
+            "response": result["response"],
             "session_id": session_id
         }
         
@@ -212,28 +251,29 @@ async def get_therapy_response(request: TextRequest):
         logger.error(f"Error getting therapy response: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/text-to-speech")
 async def text_to_speech_endpoint(request: TextRequest):
     """Convert text to speech using OpenAI TTS with parallel processing"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
     try:
         start_time = time.time()
         
         # Always use parallel processing regardless of text length
         text_length = len(request.text)
         
+        # Use clean architecture audio service
+        audio_service = clean_app.get_audio_service()
+        
         if text_length <= 150:
-            # Use parallel TTS for texts 200 characters or less
-            audio_data = await bot.text_to_speech_parallel(request.text)
+            # Use parallel TTS for texts 150 characters or less
+            audio_data = await audio_service.text_to_speech_parallel(request.text)
             method_used = "parallel"
         else:
-            # Use parallel TTS with more workers for texts over 200 characters
-            audio_data = await bot.text_to_speech_parallel(request.text, max_workers=8)
+            # Use parallel TTS with more workers for texts over 150 characters (PERFORMANCE RESTORED)
+            audio_data = await audio_service.text_to_speech_parallel(request.text, max_workers=8)
             method_used = "parallel_extended"
         
-        if not audio_data:
+        if not audio_data.audio_bytes:
             raise HTTPException(status_code=500, detail="Could not generate audio")
         
         # Save audio to file
@@ -241,7 +281,7 @@ async def text_to_speech_endpoint(request: TextRequest):
         audio_path = static_dir / audio_filename
         
         async with aiofiles.open(audio_path, "wb") as f:
-            await f.write(audio_data)
+            await f.write(audio_data.audio_bytes)
         
         processing_time = time.time() - start_time
         
@@ -258,136 +298,79 @@ async def text_to_speech_endpoint(request: TextRequest):
         logger.error(f"Error in text-to-speech: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/text-to-speech-streaming")
-async def text_to_speech_streaming_endpoint(request: TextRequest):
-    """Stream text-to-speech audio chunks as they become available"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    try:
-        from fastapi.responses import StreamingResponse
-        import json
-        
-        async def generate_audio_stream():
-            """Generate streaming audio chunks"""
-            chunk_count = 0
-            
-            # Send initial metadata
-            metadata = {
-                "type": "metadata",
-                "text": request.text,
-                "text_length": len(request.text),
-                "estimated_chunks": len(bot._split_text_into_sentences(request.text))
-            }
-            yield f"data: {json.dumps(metadata)}\n\n"
-            
-            # Stream audio chunks
-            async for chunk_data in bot.text_to_speech_streaming(request.text):
-                chunk_count += 1
-                
-                # Save chunk to file
-                audio_filename = f"tts_chunk_{uuid.uuid4().hex}.mp3"
-                audio_path = static_dir / audio_filename
-                
-                async with aiofiles.open(audio_path, "wb") as f:
-                    await f.write(chunk_data["audio"])
-                
-                # Send chunk information
-                chunk_info = {
-                    "type": "audio_chunk",
-                    "chunk_id": chunk_data["chunk_id"],
-                    "audio_url": f"/static/{audio_filename}",
-                    "text": chunk_data["text"],
-                    "total_chunks": chunk_data["total_chunks"],
-                    "progress": round((chunk_data["chunk_id"] + 1) / chunk_data["total_chunks"] * 100, 2)
-                }
-                yield f"data: {json.dumps(chunk_info)}\n\n"
-            
-            # Send completion signal
-            completion = {
-                "type": "complete",
-                "total_chunks_processed": chunk_count,
-                "message": "TTS streaming completed"
-            }
-            yield f"data: {json.dumps(completion)}\n\n"
-        
-        return StreamingResponse(
-            generate_audio_stream(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "*",
-            }
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in streaming TTS: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/tts-performance-stats")
 async def get_tts_performance_stats():
-    """Get TTS performance statistics and recommendations"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
+    """Get TTS performance statistics from clean architecture"""
     try:
-        return bot.get_tts_performance_stats()
+        audio_service = clean_app.get_audio_service()
+        return audio_service.get_performance_stats()
     except Exception as e:
         logger.error(f"Error getting TTS stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/session-info/{session_id}")
 async def get_session_info(session_id: str):
-    """Get session information"""
-    if not bot or session_id not in bot.conversations:
-        raise HTTPException(status_code=404, detail="Session not found")
-    
-    conversation = bot.conversations[session_id]
-    return {
-        "session_id": session_id,
-        "message_count": len(conversation),
-        "last_activity": "recent"  # You might want to add timestamp tracking
-    }
+    """Get session information using clean architecture"""
+    try:
+        therapy_use_case = clean_app.get_therapy_use_case()
+        session_info = therapy_use_case.get_session_info(session_id)
+        
+        if not session_info:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return session_info
+        
+    except Exception as e:
+        logger.error(f"Error getting session info: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.delete("/session/{session_id}")
 async def clear_session(session_id: str):
-    """Clear a specific session"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    if session_id in bot.conversations:
-        del bot.conversations[session_id]
-        return {"message": f"Session {session_id} cleared"}
-    else:
-        raise HTTPException(status_code=404, detail="Session not found")
+    """Clear session using clean architecture"""
+    try:
+        therapy_use_case = clean_app.get_therapy_use_case()
+        success = therapy_use_case.delete_session(session_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"message": "Session cleared successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error clearing session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/sessions")
 async def list_sessions():
-    """List all active sessions"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    return {
-        "active_sessions": list(bot.conversations.keys()),
-        "total_sessions": len(bot.conversations)
-    }
+    """List all sessions using clean architecture"""
+    try:
+        therapy_use_case = clean_app.get_therapy_use_case()
+        sessions = therapy_use_case.list_sessions()
+        
+        return {"sessions": sessions}
+        
+    except Exception as e:
+        logger.error(f"Error listing sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/session-analysis/{session_id}")
 async def get_session_analysis(session_id: str):
-    """Get comprehensive session analysis including intent and safety assessment"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
+    """Get session analysis using clean architecture"""
     try:
-        analysis = bot.get_session_analysis(session_id)
-        if "error" in analysis:
-            raise HTTPException(status_code=404, detail=analysis["error"])
+        therapy_use_case = clean_app.get_therapy_use_case()
+        analysis = therapy_use_case.get_session_analysis(session_id)
+        
         return analysis
+        
     except Exception as e:
         logger.error(f"Error getting session analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/session-consent")
 async def create_session_consent(
@@ -399,11 +382,11 @@ async def create_session_consent(
     anonymization_level: str = Form("high"),
     retention_period: int = Form(30)
 ):
-    """Create session consent record for data protection compliance"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
+    """Create session consent using clean architecture"""
     try:
+        session_manager = clean_app.get_session_manager()
+        consent_manager = session_manager.get_consent_manager()
+        
         consent_data = {
             "consent_given": consent_given,
             "recording_consent": recording_consent,
@@ -412,105 +395,71 @@ async def create_session_consent(
             "retention_period": retention_period
         }
         
-        result = bot.create_session_consent(session_id, ip_address, consent_data)
-        if "error" in result:
-            raise HTTPException(status_code=400, detail=result["error"])
+        consent_record = consent_manager.record_consent(
+            session_id, ip_address, consent_data
+        )
         
-        return result
+        return consent_record
+        
     except Exception as e:
         logger.error(f"Error creating session consent: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/crisis-resources")
 async def get_crisis_resources():
-    """Get crisis resources and emergency contacts"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
+    """Get crisis resources from clean architecture"""
     try:
-        resources = bot.get_crisis_resources()
-        return resources
+        return clean_app.get_crisis_resources()
     except Exception as e:
         logger.error(f"Error getting crisis resources: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/intent-analysis")
-async def analyze_intent(request: TextRequest):
-    """Analyze user input for emotional state and therapeutic context"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    # Note: Intent analysis functionality has been integrated into the system prompt
-    # This endpoint is no longer needed as analysis is done internally
-    raise HTTPException(status_code=501, detail="Intent analysis functionality has been integrated into the main therapeutic response system")
-
-@app.post("/safety-assessment")
-async def assess_safety(request: TextRequest):
-    """Perform safety assessment for user input"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    # Note: Safety assessment functionality has been integrated into the system prompt
-    # This endpoint is no longer needed as safety assessment is done internally
-    raise HTTPException(status_code=501, detail="Safety assessment functionality has been integrated into the main therapeutic response system")
-
-@app.post("/therapeutic-response")
-async def get_therapeutic_response_enhanced(request: TextRequest):
-    """Get therapeutic response with full analysis and safety features"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    try:
-        session_id = request.session_id or str(uuid.uuid4())
-        
-        # Get therapeutic response (this will include all analysis internally)
-        ai_response = bot._get_therapeutic_response(request.text, session_id)
-        
-        # Get session analysis if available
-        session_analysis = {}
-        if session_id in bot.session_metadata:
-            session_analysis = bot.get_session_analysis(session_id)
-        
-        return {
-            "response": ai_response,
-            "session_id": session_id,
-            "session_analysis": session_analysis
-        }
-        
-    except Exception as e:
-        logger.error(f"Error getting therapeutic response: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/therapeutic-response-validation")
 async def get_therapeutic_response_with_validation(request: TextRequest):
-    """Get therapeutic response with validation from both GPT-4.1 and Claude 3.5 Sonnet"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
+    """Get validated response from both models using clean architecture"""
     try:
-        session_id = request.session_id or str(uuid.uuid4())
+        therapy_use_case = clean_app.get_therapy_use_case()
+        validation_result = await therapy_use_case.get_validated_response(
+            request.text, 
+            request.session_id
+        )
         
-        # Get responses from both models for comparison
-        results = bot._get_therapeutic_response_with_validation(request.text, session_id)
-        
-        return results
+        return {
+            "user_input": request.text,
+            "session_id": request.session_id,
+            "gpt_response": validation_result.gpt_response.content if validation_result.gpt_response else None,
+            "claude_response": validation_result.claude_response.content if validation_result.claude_response else None,
+            "primary_response": validation_result.get_primary_or_fallback().content,
+            "primary_model": validation_result.get_primary_or_fallback().model_used,
+            "has_claude_fallback": validation_result.has_claude_fallback(),
+            "consensus_reached": validation_result.consensus_reached
+        }
         
     except Exception as e:
-        logger.error(f"Error getting therapeutic response validation: {e}")
+        logger.error(f"Error in therapeutic response validation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @app.get("/claude-status")
 async def get_claude_status():
-    """Get Claude availability status"""
-    if not bot:
-        raise HTTPException(status_code=503, detail="Bot not initialized")
-    
-    return {
-        "claude_available": bot.claude_available,
-        "status": "Claude 3.5 Sonnet ready for fallback"
-    }
+    """Get Claude status from clean architecture"""
+    try:
+        ai_orchestrator = clean_app.get_ai_orchestrator()
+        service_status = ai_orchestrator.get_service_status()
+        
+        return {
+            "claude_available": service_status["claude_available"],
+            "claude_model": service_status["claude_model"],
+            "gpt_available": service_status["gpt_available"],
+            "gpt_model": service_status["gpt_model"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting Claude status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

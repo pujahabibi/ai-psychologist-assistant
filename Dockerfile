@@ -67,6 +67,7 @@ RUN pip install --no-cache-dir \
     anthropic==0.40.0 \
     pygame==2.5.2 \
     python-dotenv==1.0.0 \
+    pydub==0.25.1 \
     numpy \
     pandas \
     pathlib2

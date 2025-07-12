@@ -224,7 +224,7 @@ async def text_to_speech_endpoint(request: TextRequest):
         # Always use parallel processing regardless of text length
         text_length = len(request.text)
         
-        if text_length < 150:
+        if text_length <= 150:
             # Use parallel TTS for texts 200 characters or less
             audio_data = await bot.text_to_speech_parallel(request.text)
             method_used = "parallel"
@@ -440,41 +440,9 @@ async def analyze_intent(request: TextRequest):
     if not bot:
         raise HTTPException(status_code=503, detail="Bot not initialized")
     
-    if not bot.intent_analyzer:
-        raise HTTPException(status_code=503, detail="Intent analyzer not available")
-    
-    try:
-        session_id = request.session_id or str(uuid.uuid4())
-        conversation_history = bot.conversations.get(session_id, [])
-        
-        intent_result = bot.intent_analyzer.analyze_intent(request.text, conversation_history)
-        
-        # Format the result for JSON response
-        result = {
-            "primary_emotion": intent_result.primary_emotion.value,
-            "secondary_emotions": [emotion.value for emotion in intent_result.secondary_emotions],
-            "emotion_intensity": intent_result.emotion_intensity,
-            "therapeutic_context": intent_result.therapeutic_context.value,
-            "suggested_approach": intent_result.suggested_approach,
-            "suicide_risk": intent_result.suicide_risk.value,
-            "self_harm_risk": intent_result.self_harm_risk.value,
-            "crisis_indicators": intent_result.crisis_indicators,
-            "cultural_factors": intent_result.cultural_factors,
-            "spiritual_elements": intent_result.spiritual_elements,
-            "cbt_techniques": intent_result.cbt_techniques,
-            "intervention_priority": intent_result.intervention_priority,
-            "session_goals": intent_result.session_goals,
-            "confidence_score": intent_result.confidence_score,
-            "requires_escalation": intent_result.requires_escalation,
-            "emergency_contact_needed": intent_result.emergency_contact_needed,
-            "timestamp": intent_result.timestamp.isoformat(),
-            "session_id": session_id
-        }
-        
-        return result
-    except Exception as e:
-        logger.error(f"Error in intent analysis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # Note: Intent analysis functionality has been integrated into the system prompt
+    # This endpoint is no longer needed as analysis is done internally
+    raise HTTPException(status_code=501, detail="Intent analysis functionality has been integrated into the main therapeutic response system")
 
 @app.post("/safety-assessment")
 async def assess_safety(request: TextRequest):
@@ -482,45 +450,9 @@ async def assess_safety(request: TextRequest):
     if not bot:
         raise HTTPException(status_code=503, detail="Bot not initialized")
     
-    if not bot.safety_mechanisms or not bot.intent_analyzer:
-        raise HTTPException(status_code=503, detail="Safety mechanisms not available")
-    
-    try:
-        session_id = request.session_id or str(uuid.uuid4())
-        conversation_history = bot.conversations.get(session_id, [])
-        
-        # First get intent analysis
-        intent_result = bot.intent_analyzer.analyze_intent(request.text, conversation_history)
-        
-        # Then perform safety assessment
-        safety_assessment = bot.safety_mechanisms.assess_safety(
-            request.text, intent_result, conversation_history, session_id
-        )
-        
-        # Format the result for JSON response
-        result = {
-            "alert_level": safety_assessment.alert_level.value,
-            "risk_factors": safety_assessment.risk_factors,
-            "protective_factors": safety_assessment.protective_factors,
-            "immediate_actions": safety_assessment.immediate_actions,
-            "referral_needed": safety_assessment.referral_needed,
-            "referral_triggers": [trigger.value for trigger in safety_assessment.referral_triggers],
-            "emergency_contact": safety_assessment.emergency_contact,
-            "session_monitoring": safety_assessment.session_monitoring,
-            "data_protection_notes": safety_assessment.data_protection_notes,
-            "timestamp": safety_assessment.timestamp.isoformat(),
-            "session_id": session_id
-        }
-        
-        # Add emergency response plan if needed
-        if safety_assessment.alert_level.value in ["orange", "red"]:
-            emergency_plan = bot.safety_mechanisms.get_emergency_response_plan(safety_assessment)
-            result["emergency_response_plan"] = emergency_plan
-        
-        return result
-    except Exception as e:
-        logger.error(f"Error in safety assessment: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # Note: Safety assessment functionality has been integrated into the system prompt
+    # This endpoint is no longer needed as safety assessment is done internally
+    raise HTTPException(status_code=501, detail="Safety assessment functionality has been integrated into the main therapeutic response system")
 
 @app.post("/therapeutic-response")
 async def get_therapeutic_response_enhanced(request: TextRequest):

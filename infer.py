@@ -23,8 +23,9 @@ from dataclasses import dataclass, asdict
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-# Import new therapeutic capabilities
-from intent_analysis import IntentAnalyzer, IntentAnalysisResult
+# Import therapeutic capabilities
+# NOTE: intent_analysis is now integrated into the system prompt
+# from intent_analysis import IntentAnalyzer, IntentAnalysisResult
 from therapeutic_capabilities import TherapeuticCapabilities, TherapeuticResponse
 from safety_mechanisms import SafetyMechanisms, SafetyAssessment, ContentFilterResult
 
@@ -85,7 +86,9 @@ class IndonesianMentalHealthBot:
         
         # Initialize therapeutic capabilities
         try:
-            self.intent_analyzer = IntentAnalyzer(api_key=self.api_key)
+            # NOTE: IntentAnalyzer is now integrated into the system prompt
+            # self.intent_analyzer = IntentAnalyzer(api_key=self.api_key)
+            self.intent_analyzer = None  # No longer used - integrated into system prompt
             self.therapeutic_capabilities = TherapeuticCapabilities(api_key=self.api_key)
             self.safety_mechanisms = SafetyMechanisms(api_key=self.api_key)
             print("🧠 Advanced therapeutic capabilities initialized")
@@ -104,7 +107,7 @@ class IndonesianMentalHealthBot:
         print("🔒 Dilengkapi dengan sistem keamanan dan analisis intent yang canggih")
 
     def _create_system_prompt(self) -> str:
-        """Create culturally sensitive system prompt"""
+        """Create comprehensive system prompt with integrated intent analysis and response generation"""
         return """Anda adalah Kak Indira, seorang konselor kesehatan mental yang berpengalaman dan berempati tinggi, yang secara khusus memahami budaya Indonesia. Anda memiliki keahlian dalam:
 
 IDENTITAS & KARAKTER:
@@ -118,6 +121,143 @@ PENDEKATAN BUDAYA INDONESIA:
 - Menghormati nilai-nilai Islam dan tradisi keagamaan
 - Memahami stigma terhadap kesehatan mental di masyarakat Indonesia
 - Menggunakan pendekatan yang tidak konfrontatif dan menghormati hierarki
+
+ANALISIS INTENT DAN EMOSI:
+Sebelum memberikan respons, Anda harus menganalisis input pengguna untuk:
+
+1. DETEKSI EMOSI:
+   - Identifikasi emosi utama: neutral, happy, sad, angry, anxious, depressed, fearful, frustrated, hopeful, overwhelmed, lonely, confused, guilty, ashamed, grieving
+   - Intensitas emosi (0.0-1.0): rendah (0.0-0.3), sedang (0.4-0.6), tinggi (0.7-1.0)
+   - Identifikasi emosi sekunder yang mungkin ada (dapat lebih dari satu)
+   - Berikan confidence score untuk analisis emosi (0.0-1.0)
+
+2. KONTEKS TERAPEUTIK:
+   - general_support: dukungan umum
+   - crisis_intervention: intervensi krisis
+   - cbt_techniques: teknik CBT
+   - active_listening: mendengarkan aktif
+   - cultural_trauma: trauma budaya
+   - spiritual_support: dukungan spiritual
+   - family_dynamics: dinamika keluarga
+   - grief_counseling: konseling duka
+   - anxiety_management: manajemen kecemasan
+   - depression_support: dukungan depresi
+   - relationship_issues: masalah hubungan
+   - workplace_stress: stres kerja
+   - academic_pressure: tekanan akademis
+
+3. PENILAIAN RISIKO:
+   - Risiko bunuh diri: low, medium, high, critical
+   - Risiko self-harm: low, medium, high, critical
+   - Deteksi krisis berdasarkan kata kunci:
+     * Bunuh diri: "bunuh diri", "ingin mati", "mengakhiri hidup", "tidak ingin hidup", "suicide", "kill myself"
+     * Self-harm: "melukai diri", "menyakiti diri", "self harm", "cutting", "memotong", "menyilet"
+     * Kekerasan: "menyakiti orang", "membunuh", "kekerasan", "melukai"
+     * Substansi: "obat-obatan", "alkohol", "narkoba", "mabuk", "overdosis"
+     * Darurat: "darurat", "emergency", "bantuan segera", "tidak tahan lagi", "putus asa"
+
+4. PRIORITAS INTERVENSI:
+   - immediate: butuh tindakan segera (risiko critical)
+   - urgent: butuh tindakan cepat (risiko high)
+   - routine: tindakan rutin (risiko medium)
+   - low: tindakan minimal (risiko low)
+
+5. TUJUAN SESI:
+   - Tentukan tujuan sesi berdasarkan analisis: "Provide emotional support", "Crisis intervention", "Anxiety management", "Depression support", "Family conflict resolution", dll.
+
+6. TEKNIK CBT YANG COCOK:
+   - Anxiety: "Deep breathing exercises", "Progressive muscle relaxation", "Grounding techniques"
+   - Depression: "Behavioral activation", "Mood monitoring", "Pleasant activity scheduling"
+   - General CBT: "Thought challenging", "Cognitive restructuring", "Behavioral experiments"
+   - Grief: "Normalize grief process", "Memory preservation", "Meaning-making activities"
+   - Cultural trauma: "Cultural validation", "Community connection", "Traditional healing integration"
+
+7. FAKTOR BUDAYA:
+   - Keluarga: keluarga, orangtua, anak, suami, istri, kakak, adik, mertua
+   - Agama: allah, tuhan, doa, sholat, puasa, haji, umrah, masjid, gereja
+   - Sosial: masyarakat, tetangga, teman, komunitas, lingkungan
+   - Kerja: kerja, kantor, boss, atasan, gaji, pegawai, bisnis
+   - Pendidikan: sekolah, kuliah, ujian, nilai, guru, dosen
+
+8. ELEMEN SPIRITUAL:
+   - Identifikasi referensi spiritual/religius dalam input
+   - Catat praktik keagamaan yang disebutkan
+   - Perhatikan konflik nilai religius vs modern
+
+9. ESKALASI DAN DARURAT:
+   - Requires escalation: true jika risiko high/critical atau ada indikator krisis
+   - Emergency contact needed: true jika risiko critical atau ada bahaya immediate
+   - Crisis indicators: daftar spesifik indikator yang terdeteksi
+
+ATURAN RESPONS BERDASARKAN ANALISIS:
+
+JIKA EMOSI ANXIOUS/FEARFUL:
+- Validasi perasaan: "Saya memahami perasaan cemas yang Adik alami"
+- Teknik grounding: "Coba tarik napas dalam-dalam, rasakan kaki Adik menyentuh lantai"
+- Progressive muscle relaxation: "Cobalah tegangkan lalu rilekskan otot-otot tubuh secara bergantian"
+- Pertanyaan eksplorasi: "Apa yang membuat Adik merasa cemas saat ini?"
+
+JIKA EMOSI SAD/DEPRESSED:
+- Validasi dengan empati: "Terima kasih sudah berbagi perasaan ini dengan saya"
+- Hindari toxic positivity: jangan langsung bilang "think positive"
+- Behavioral activation: "Coba lakukan satu aktivitas kecil yang biasanya Adik suka"
+- Mood monitoring: "Bagaimana perasaan Adik berubah sepanjang hari?"
+- Eksplorasi support system: "Siapa yang biasanya Adik ajak bicara?"
+
+JIKA EMOSI ANGRY/FRUSTRATED:
+- Validasi tanpa judgment: "Marah adalah perasaan yang wajar"
+- Teknik regulasi emosi: "Bagaimana biasanya Adik mengatasi perasaan marah?"
+- Cognitive restructuring: "Mari kita lihat situasi ini dari sudut pandang lain"
+- Eksplorasi pemicu: "Apa yang membuat Adik merasa kesal?"
+
+JIKA KONTEKS FAMILY_DYNAMICS:
+- Pertimbangkan hierarki keluarga Indonesia
+- Hormati nilai-nilai tradisional
+- Cultural validation: "Saya memahami dinamika keluarga Indonesia"
+- Berikan strategi komunikasi yang sesuai budaya
+
+JIKA KONTEKS SPIRITUAL_SUPPORT:
+- Integrasikan nilai-nilai keagamaan
+- Gunakan referensi spiritual yang sesuai
+- Traditional healing integration: "Bagaimana nilai spiritual membantu Adik?"
+- Hindari advice yang bertentangan dengan nilai agama
+
+JIKA EMOSI GRIEVING:
+- Normalize grief process: "Duka adalah proses yang natural dan butuh waktu"
+- Memory preservation: "Ceritakan kenangan indah tentang yang Adik rindukan"
+- Meaning-making: "Apa yang bisa kita pelajari dari pengalaman ini?"
+
+JIKA EMOSI OVERWHELMED/CONFUSED:
+- Validasi kompleksitas: "Saya pahami banyak hal yang membuat Adik bingung"
+- Break down problems: "Mari kita pecah masalah ini menjadi bagian kecil"
+- Thought challenging: "Mana yang fakta dan mana yang pikiran?"
+
+JIKA KONTEKS WORKPLACE_STRESS:
+- Eksplorasi beban kerja dan ekspektasi
+- Stress management techniques
+- Work-life balance strategies
+
+JIKA KONTEKS ACADEMIC_PRESSURE:
+- Validasi tekanan akademis
+- Study strategies dan time management
+- Performance anxiety management
+
+JIKA PRIORITAS IMMEDIATE/URGENT:
+- Assess immediate safety: "Apakah Adik dalam keadaan aman sekarang?"
+- Crisis intervention: Fokus pada stabilisasi
+- Safety planning: "Mari buat rencana keamanan bersama"
+
+JIKA DETEKSI KRISIS (HIGH/CRITICAL RISK):
+- Prioritaskan keselamatan: "Keselamatan Adik adalah yang terpenting"
+- Ask about specific plans: "Apakah Adik punya rencana untuk menyakiti diri?"
+- Berikan informasi hotline: 119 (Pencegahan Bunuh Diri), 118 (Gawat Darurat), 110 (Polisi)
+- Professional referral: "Saya sangat menyarankan Adik berbicara dengan profesional"
+- Jangan tinggalkan pengguna sendirian: "Saya akan tetap di sini untuk Adik"
+
+JIKA MULTIPLE EMOTIONS DETECTED:
+- Acknowledge complexity: "Saya lihat Adik merasakan beberapa emosi sekaligus"
+- Prioritize primary emotion untuk respons utama
+- Validate secondary emotions: "Wajar jika Adik merasa campur aduk"
 
 TEKNIK TERAPI:
 - Active listening dengan validasi emosi
@@ -167,59 +307,28 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             if len(conversation) > self.max_conversation_length:
                 conversation = conversation[-self.trim_to_length:]
             
-            # Intent analysis for enhanced understanding
-            intent_result = None
-            if self.intent_analyzer:
-                try:
-                    intent_result = self.intent_analyzer.analyze_intent(user_input, conversation)
-                    print(f"🔍 Intent Analysis: {intent_result.primary_emotion.value} emotion, {intent_result.therapeutic_context.value} context")
-                except Exception as e:
-                    print(f"Warning: Intent analysis failed: {e}")
+            # Use integrated system prompt for response generation
+            messages = [{"role": "system", "content": self.system_prompt}]
+            messages.extend(conversation)
             
-            # Safety assessment
-            safety_assessment = None
-            if self.safety_mechanisms and intent_result:
-                try:
-                    safety_assessment = self.safety_mechanisms.assess_safety(user_input, intent_result, conversation, session_id)
-                    print(f"🔒 Safety Assessment: {safety_assessment.alert_level.value} alert level")
-                    
-                    # Store session metadata
-                    self.session_metadata[session_id] = {
-                        "last_safety_assessment": safety_assessment,
-                        "last_intent_analysis": intent_result,
-                        "total_interactions": len(conversation)
-                    }
-                except Exception as e:
-                    print(f"Warning: Safety assessment failed: {e}")
+            response = self.client.chat.completions.create(
+                model="gpt-4.1-nano",
+                messages=messages,
+                max_tokens=150,
+                temperature=0.7,
+                presence_penalty=0.1,
+                frequency_penalty=0.1
+            )
             
-            # Generate therapeutic response using advanced capabilities
-            if self.therapeutic_capabilities and intent_result:
-                try:
-                    therapeutic_response = self.therapeutic_capabilities.generate_therapeutic_response(
-                        user_input, intent_result, conversation, session_id
-                    )
-                    
-                    # Add AI response to conversation
-                    conversation.append({"role": "assistant", "content": therapeutic_response.response_text})
-                    
-                    # Update conversation history
-                    self.conversations[session_id] = conversation
-                    
-                    # Handle crisis escalation
-                    if therapeutic_response.crisis_escalation and safety_assessment:
-                        crisis_message = self._handle_crisis_escalation(safety_assessment)
-                        if crisis_message:
-                            return f"{therapeutic_response.response_text}\n\n{crisis_message}"
-                    
-                    return therapeutic_response.response_text
-                    
-                except Exception as e:
-                    print(f"Warning: Therapeutic response generation failed: {e}")
-                    # Fall back to basic response
-                    return self._generate_basic_response(user_input, conversation)
+            ai_response = response.choices[0].message.content.strip()
             
-            # Fallback to basic response if advanced capabilities unavailable
-            return self._generate_basic_response(user_input, conversation)
+            # Add AI response to conversation
+            conversation.append({"role": "assistant", "content": ai_response})
+            
+            # Update conversation history
+            self.conversations[session_id] = conversation
+            
+            return ai_response
             
         except Exception as e:
             print(f"Error in therapeutic response: {e}")
@@ -730,57 +839,34 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             pygame.mixer.quit()
 
     async def optimized_therapeutic_response(self, user_input: str, session_id: str) -> str:
-        """Parallel processing for faster response"""
+        """Integrated response generation with streamlined processing"""
         
-        # Start multiple tasks concurrently
-        tasks = []
-        
-        # Task 1: Intent Analysis (can start immediately)
-        intent_task = asyncio.create_task(
-            self._async_intent_analysis(user_input, session_id)
-        )
-        
-        # Task 2: Quick safety patterns (lightweight, immediate)
-        safety_patterns_task = asyncio.create_task(
-            self._quick_safety_patterns(user_input)
-        )
-        
-        # Wait for quick results
-        quick_safety = await safety_patterns_task
-        
-        # If immediate crisis detected, skip full analysis
-        if quick_safety.get('immediate_crisis'):
-            return self._generate_crisis_response(quick_safety)
-        
-        # Continue with full analysis
-        intent_result = await intent_task
-        
-        # Parallel: Safety Assessment + Response Generation
-        safety_task = asyncio.create_task(
-            self._async_safety_assessment(user_input, intent_result, session_id)
-        )
-        
-        response_task = asyncio.create_task(
-            self._async_therapeutic_response(user_input, intent_result, session_id)
-        )
-        
-        # Wait for both
-        safety_result, therapeutic_response = await asyncio.gather(
-            safety_task, response_task
-        )
-        
-        # Handle crisis escalation if needed
-        if safety_result.emergency_contact_needed:
-            return self._add_crisis_info(therapeutic_response, safety_result)
-        
-        return therapeutic_response
+        # Use integrated system prompt approach
+        return self._get_therapeutic_response(user_input, session_id)
 
-    async def stream_therapeutic_response(self, user_input: str, intent_result: IntentAnalysisResult):
-        """Stream response as it's generated"""
+    async def stream_therapeutic_response(self, user_input: str, session_id: str = None):
+        """Stream response as it's generated with integrated intent analysis"""
+        
+        # Get or create conversation history
+        if session_id not in self.conversations:
+            self.conversations[session_id] = []
+        
+        conversation = self.conversations[session_id]
+        
+        # Add user input to conversation
+        conversation.append({"role": "user", "content": user_input})
+        
+        # Trim conversation if too long
+        if len(conversation) > self.max_conversation_length:
+            conversation = conversation[-self.trim_to_length:]
+        
+        # Prepare messages with integrated system prompt
+        messages = [{"role": "system", "content": self.system_prompt}]
+        messages.extend(conversation)
         
         response = await self.client.chat.completions.create(
             model="gpt-4.1-mini",
-            messages=self._prepare_messages(user_input, intent_result),
+            messages=messages,
             max_tokens=150,  # Reduced for speed
             temperature=0.7,
             stream=True  # Enable streaming
@@ -798,6 +884,12 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
                     "content": chunk_text,
                     "full_so_far": full_response
                 }
+        
+        # Add AI response to conversation
+        conversation.append({"role": "assistant", "content": full_response})
+        
+        # Update conversation history
+        self.conversations[session_id] = conversation
         
         # Send final response
         yield {
@@ -832,12 +924,12 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
                 sentence_buffer = sentences[-1] if sentences else ""
 
     async def voice_therapy_optimized(self, audio_data: bytes, session_id: str):
-        """Optimized voice therapy with parallel processing"""
+        """Optimized voice therapy with integrated processing"""
         
         # Step 1: Speech-to-Text (must be first)
         user_text = await self._async_speech_to_text(audio_data)
         
-        # Step 2: Start response generation
+        # Step 2: Start response generation using integrated system prompt
         response_task = asyncio.create_task(
             self.optimized_therapeutic_response(user_text, session_id)
         )
@@ -855,6 +947,28 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             "user_text": user_text,
             "ai_response": ai_response,
             "audio_task": tts_task  # Let frontend handle this
+        }
+    
+    def test_integrated_response(self, user_input: str, session_id: str = None) -> Dict[str, Any]:
+        """Test the new integrated intent analysis and response generation"""
+        if session_id is None:
+            session_id = str(uuid.uuid4())
+        
+        print(f"🧪 Testing integrated response system...")
+        print(f"📝 User Input: {user_input}")
+        print(f"🔑 Session ID: {session_id}")
+        
+        # Generate response using integrated system prompt
+        ai_response = self._get_therapeutic_response(user_input, session_id)
+        
+        print(f"🤖 AI Response: {ai_response}")
+        
+        return {
+            "user_input": user_input,
+            "ai_response": ai_response,
+            "session_id": session_id,
+            "method": "integrated_intent_analysis",
+            "timestamp": datetime.now().isoformat()
         }
 
 class ResponseCache:

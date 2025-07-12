@@ -161,12 +161,11 @@ async def voice_therapy(
         
         # Convert response to speech using parallel processing
         response_length = len(ai_response)
-        # Use parallel processing with smart worker allocation
+        # Use parallel processing with smart worker allocation (RESTORED ORIGINAL LOGIC)
         if response_length <= 150:
-            audio_response_data = await audio_service.text_to_speech(ai_response)
+            audio_response_data = await audio_service.text_to_speech_parallel(ai_response)
         else:
-            # For longer responses, use explicit max_workers=8 for performance
-            audio_response_data = await audio_service._text_to_speech_parallel(ai_response, max_workers=8)
+            audio_response_data = await audio_service.text_to_speech_parallel(ai_response, max_workers=8)
         
         # Save audio response to file
         audio_url = None
@@ -267,11 +266,11 @@ async def text_to_speech_endpoint(request: TextRequest):
         
         if text_length <= 150:
             # Use parallel TTS for texts 150 characters or less
-            audio_data = await audio_service.text_to_speech(request.text)
+            audio_data = await audio_service.text_to_speech_parallel(request.text)
             method_used = "parallel"
         else:
-            # Use parallel TTS with more workers for texts over 150 characters
-            audio_data = await audio_service._text_to_speech_parallel(request.text, max_workers=8)
+            # Use parallel TTS with more workers for texts over 150 characters (PERFORMANCE RESTORED)
+            audio_data = await audio_service.text_to_speech_parallel(request.text, max_workers=8)
             method_used = "parallel_extended"
         
         if not audio_data.audio_bytes:

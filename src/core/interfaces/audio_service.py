@@ -22,6 +22,16 @@ class IAudioService(ABC):
         pass
     
     @abstractmethod
+    async def text_to_speech_parallel(self, text: str, max_workers: int = 8) -> AudioData:
+        """Convert text to speech using parallel processing for optimal performance"""
+        pass
+    
+    @abstractmethod
+    def get_performance_stats(self) -> Dict[str, Any]:
+        """Get TTS performance statistics"""
+        pass
+    
+    @abstractmethod
     def is_available(self) -> bool:
         """Check if service is available"""
         pass

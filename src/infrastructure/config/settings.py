@@ -16,11 +16,11 @@ load_dotenv()
 class ModelConfig:
     """Configuration for AI models"""
     # Original model names preserved exactly
-    primary_model: str = "gpt-4.1-nano"
+    primary_model: str = "gpt-4.1"
     fallback_model: str = "claude-3-5-sonnet-20241022"
     
     # Original hyperparameters preserved exactly
-    max_tokens: int = 1024
+    max_tokens: int = 512
     temperature: float = 0.3
     presence_penalty: float = 0.1
     frequency_penalty: float = 0.1

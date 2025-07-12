@@ -86,7 +86,7 @@ speech/
 - Cultural context understanding
 - **Preserved hyperparameters**:
   - Temperature: 0.3
-  - Max tokens: 1024
+  - Max tokens: 512
   - Presence penalty: 0.1
   - Frequency penalty: 0.1
 
@@ -255,7 +255,7 @@ print(f"Primary: {validation.get_primary_or_fallback().content}")
 ### Preserved Elements
 - **System prompt**: Exactly as in original
 - **Model names**: gpt-4.1 and claude-3-5-sonnet-20241022
-- **Hyperparameters**: temperature=0.3, max_tokens=1024, etc.
+- **Hyperparameters**: temperature=0.3, max_tokens=512, etc.
 - **API endpoints**: All original endpoints maintained
 - **User preferences**: Parallel TTS, MP3 format
 

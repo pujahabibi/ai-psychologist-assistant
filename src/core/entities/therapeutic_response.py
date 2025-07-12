@@ -82,7 +82,7 @@ class TherapeuticResponse:
     content: str = ""
     session_id: str = ""
     user_input: str = ""
-    model_used: str = "gpt-4.1-nano"  # Preserving original model name
+    model_used: str = "gpt-4.1"  # Preserving original model name
     emotion_analysis: Optional[EmotionAnalysis] = None
     safety_assessment: Optional[SafetyAssessment] = None
     processing_time: float = 0.0

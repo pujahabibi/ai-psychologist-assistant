@@ -466,9 +466,9 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
                 "text_to_speech_streaming"  # Streaming chunks
             ],
             "recommendations": {
-                "short_text": "Use text_to_speech for texts under 100 characters",
-                "medium_text": "Use text_to_speech_parallel for 100-1000 characters", 
-                "long_text": "Use text_to_speech_streaming for texts over 1000 characters",
+                "short_text": "Use text_to_speech_parallel for texts 200 characters or less",
+                "medium_text": "Use text_to_speech_parallel with max_workers=8 for texts over 200 characters", 
+                "long_text": "Use text_to_speech_parallel with max_workers=8 for texts over 200 characters",
                 "real_time": "Use text_to_speech_streaming for real-time applications"
             },
             "performance_benefits": {

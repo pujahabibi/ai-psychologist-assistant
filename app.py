@@ -121,53 +121,74 @@ async def voice_therapy(
     session_id: Optional[str] = Form(None)
 ):
     """
-    Complete voice therapy interaction using clean architecture
+    Complete voice therapy interaction
+    Processes audio input and returns therapeutic response with audio
     """
+    start_time = time.time()
+    
     try:
         # Generate session ID if not provided
         if not session_id:
             session_id = str(uuid.uuid4())
         
         # Read uploaded audio file
-        audio_bytes = await audio_file.read()
+        audio_data = await audio_file.read()
         
-        # Create AudioData entity
-        audio_data = AudioData(
-            audio_bytes=audio_bytes,
+        # Create AudioData entity for clean architecture
+        audio_entity = AudioData(
+            audio_bytes=audio_data,
             format=settings.audio_config.default_format
         )
         
-        # Use clean architecture use case
+        # Convert speech to text using clean architecture
         therapy_use_case = clean_app.get_therapy_use_case()
-        result = await therapy_use_case.process_voice_therapy(audio_data, session_id)
+        audio_service = clean_app.get_audio_service()
         
-        if not result["success"]:
+        # Speech to text
+        processed_audio = await audio_service.speech_to_text(audio_entity)
+        user_text = processed_audio.transcription
+        
+        if not user_text:
             return TherapyResponse(
                 success=False,
-                error=result["error"],
+                error="Maaf, saya tidak dapat mendengar suara Anda dengan jelas. Silakan coba lagi.",
                 session_id=session_id
             )
         
+        # Get therapeutic response
+        therapy_result = await therapy_use_case.process_text_therapy(user_text, session_id)
+        ai_response = therapy_result["response"]
+        
+        # Convert response to speech using parallel processing
+        response_length = len(ai_response)
+        # Use parallel processing with smart worker allocation
+        if response_length <= 150:
+            audio_response_data = await audio_service.text_to_speech(ai_response)
+        else:
+            # For longer responses, use explicit max_workers=8 for performance
+            audio_response_data = await audio_service._text_to_speech_parallel(ai_response, max_workers=8)
+        
         # Save audio response to file
         audio_url = None
-        if result["audio_data"] and result["audio_data"].audio_bytes:
-            audio_filename = f"therapy_response_{uuid.uuid4().hex}.{settings.audio_config.default_format}"
+        if audio_response_data and audio_response_data.audio_bytes:
+            audio_filename = f"therapy_response_{uuid.uuid4().hex}.mp3"
             audio_path = static_dir / audio_filename
             
             async with aiofiles.open(audio_path, "wb") as f:
-                await f.write(result["audio_data"].audio_bytes)
+                await f.write(audio_response_data.audio_bytes)
             
             audio_url = f"/static/{audio_filename}"
         
+        # Calculate latency
+        latency = time.time() - start_time
+        
         return TherapyResponse(
             success=True,
-            user_text=result["user_text"],
-            ai_response=result["ai_response"],
+            user_text=user_text,
+            ai_response=ai_response,
             audio_url=audio_url,
             session_id=session_id,
-            latency=result["latency"],
-            model_used=result["response_metrics"]["model_used"],
-            alert_level=result["response_metrics"]["alert_level"]
+            latency=latency
         )
         
     except Exception as e:
@@ -181,19 +202,20 @@ async def voice_therapy(
 
 @app.post("/speech-to-text")
 async def speech_to_text_endpoint(audio_file: UploadFile = File(...)):
-    """Convert speech to text using clean architecture"""
+    """Convert speech to text using Whisper"""
     try:
-        audio_bytes = await audio_file.read()
+        audio_data = await audio_file.read()
         
-        # Create AudioData entity
-        audio_data = AudioData(
-            audio_bytes=audio_bytes,
+        # Create AudioData entity for clean architecture
+        audio_entity = AudioData(
+            audio_bytes=audio_data,
             format=settings.audio_config.default_format
         )
         
-        # Use clean architecture use case
-        therapy_use_case = clean_app.get_therapy_use_case()
-        text = await therapy_use_case.convert_speech_to_text(audio_data)
+        # Use audio service directly
+        audio_service = clean_app.get_audio_service()
+        processed_audio = await audio_service.speech_to_text(audio_entity)
+        text = processed_audio.transcription
         
         if not text:
             raise HTTPException(status_code=400, detail="Could not transcribe audio")
@@ -207,13 +229,15 @@ async def speech_to_text_endpoint(audio_file: UploadFile = File(...)):
 
 @app.post("/get-therapy-response")
 async def get_therapy_response(request: TextRequest):
-    """Get therapeutic response from text input using clean architecture"""
+    """Get therapeutic response from text input"""
     try:
+        session_id = request.session_id or str(uuid.uuid4())
+        
         # Use clean architecture use case
         therapy_use_case = clean_app.get_therapy_use_case()
         result = await therapy_use_case.process_text_therapy(
             request.text, 
-            request.session_id
+            session_id
         )
         
         if not result["success"]:
@@ -221,9 +245,7 @@ async def get_therapy_response(request: TextRequest):
         
         return {
             "response": result["response"],
-            "session_id": result["session_id"],
-            "model_used": result["response_metrics"]["model_used"],
-            "alert_level": result["response_metrics"]["alert_level"]
+            "session_id": session_id
         }
         
     except Exception as e:
@@ -233,19 +255,30 @@ async def get_therapy_response(request: TextRequest):
 
 @app.post("/text-to-speech")
 async def text_to_speech_endpoint(request: TextRequest):
-    """Convert text to speech using clean architecture with parallel processing"""
+    """Convert text to speech using OpenAI TTS with parallel processing"""
     try:
         start_time = time.time()
         
-        # Use clean architecture use case (always parallel per user preference)
-        therapy_use_case = clean_app.get_therapy_use_case()
-        audio_data = await therapy_use_case.convert_text_to_speech(request.text)
+        # Always use parallel processing regardless of text length
+        text_length = len(request.text)
+        
+        # Use clean architecture audio service
+        audio_service = clean_app.get_audio_service()
+        
+        if text_length <= 150:
+            # Use parallel TTS for texts 150 characters or less
+            audio_data = await audio_service.text_to_speech(request.text)
+            method_used = "parallel"
+        else:
+            # Use parallel TTS with more workers for texts over 150 characters
+            audio_data = await audio_service._text_to_speech_parallel(request.text, max_workers=8)
+            method_used = "parallel_extended"
         
         if not audio_data.audio_bytes:
             raise HTTPException(status_code=500, detail="Could not generate audio")
         
         # Save audio to file
-        audio_filename = f"tts_output_{uuid.uuid4().hex}.{settings.audio_config.default_format}"
+        audio_filename = f"tts_output_{uuid.uuid4().hex}.mp3"
         audio_path = static_dir / audio_filename
         
         async with aiofiles.open(audio_path, "wb") as f:
@@ -256,9 +289,10 @@ async def text_to_speech_endpoint(request: TextRequest):
         return {
             "audio_url": f"/static/{audio_filename}",
             "text": request.text,
-            "processing_time": processing_time,
-            "method_used": "parallel_clean_architecture",
-            "format": settings.audio_config.default_format
+            "processing_time": round(processing_time, 2),
+            "method_used": method_used,
+            "text_length": text_length,
+            "performance_gain": f"{round(text_length / processing_time, 2)} chars/sec"
         }
         
     except Exception as e:

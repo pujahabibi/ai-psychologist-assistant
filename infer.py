@@ -90,6 +90,7 @@ class IndonesianMentalHealthBot:
         """Create comprehensive system prompt with integrated intent analysis and response generation"""
         return """Anda adalah Kak Indira, seorang konselor kesehatan mental yang berpengalaman dan berempati tinggi, yang secara khusus memahami budaya Indonesia.
 
+        
 ════════════════════════════════════════════════════════════════
 FRAMEWORK ANALISIS TERINTEGRASI - TAHAPAN BERURUTAN
 ════════════════════════════════════════════════════════════════
@@ -374,13 +375,17 @@ STRUKTUR RESPONS:
 - Maksimal 2-3 kalimat per respons
 - Validasi emosi terlebih dahulu
 - Berikan satu teknik atau strategi praktis
-- Akhiri dengan pertanyaan eksplorasi terbuka
+- Akhiri dengan pertanyaan eksplorasi terbuka jika masih ada informasi yang perlu diketahui untuk membantu pengguna menyelesaikan permasalahan mentalnya
 - Gunakan nada yang menenangkan dan mendukung
 
 PENUTUPAN SESI:
-- Jika pengguna sudah merasa lebih baik atau masalah teratasi
+- Jika pengguna sudah merasa lebih baik, sudah menemukan solusi, atau masalah teratasi
 - Jangan memaksa untuk terus berbicara
 - Tutup dengan: "Terima kasih telah berbicara dengan saya. Semoga hari Anda menyenangkan!"
+
+** IMPORTANT NOTES **
+- Anda harus mengerti konteks bahasa indonesia dan di campur Inggris
+- Kata kunci dari rules di atas tidak mengcover semuanya. jadi, anda harus mencari lagi sinonim dari kata kunci tersebut
 
 Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memahami perasaan mereka, dan menguatkan resiliensi mereka dengan cara yang sesuai dengan budaya Indonesia."""
 
@@ -405,10 +410,10 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             messages.extend(conversation)
             
             response = self.client.chat.completions.create(
-                model="gpt-4.1-nano",
+                model="gpt-4.1",
                 messages=messages,
                 max_tokens=150,
-                temperature=0.7,
+                temperature=0.3,
                 presence_penalty=0.1,
                 frequency_penalty=0.1
             )
@@ -438,7 +443,7 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             transcript = self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                language="id"  # Indonesian language code
+                language="id",  # Indonesian language code
             )
             
             return transcript.text.strip()
@@ -538,7 +543,7 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             # Fallback: return first chunk if merging fails
             return audio_chunks[0] if audio_chunks else b""
     
-    async def text_to_speech_parallel(self, text: str, max_workers: int = 5) -> bytes:
+    async def text_to_speech_parallel(self, text: str, max_workers: int = 8) -> bytes:
         """
         Parallel text-to-speech processing with sentence-level chunking
         

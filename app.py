@@ -481,6 +481,37 @@ async def get_therapeutic_response_enhanced(request: TextRequest):
         logger.error(f"Error getting therapeutic response: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/therapeutic-response-validation")
+async def get_therapeutic_response_with_validation(request: TextRequest):
+    """Get therapeutic response with validation from both GPT-4.1 and Claude 3.5 Sonnet"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    try:
+        session_id = request.session_id or str(uuid.uuid4())
+        
+        # Get responses from both models for comparison
+        results = bot._get_therapeutic_response_with_validation(request.text, session_id)
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Error getting therapeutic response validation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@app.get("/claude-status")
+async def get_claude_status():
+    """Get Claude availability status"""
+    if not bot:
+        raise HTTPException(status_code=503, detail="Bot not initialized")
+    
+    return {
+        "claude_available": bot.claude_available,
+        "status": "Claude 3.5 Sonnet ready for fallback"
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 

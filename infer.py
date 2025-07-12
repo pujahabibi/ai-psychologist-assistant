@@ -23,6 +23,12 @@ from dataclasses import dataclass, asdict
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
+# Handle Anthropic import gracefully
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -55,6 +61,29 @@ class IndonesianMentalHealthBot:
         
         # Initialize OpenAI client with new format
         self.client = OpenAI(api_key=self.api_key)
+        
+        # Initialize Claude client for fallback/validation
+        self.claude_client = None
+        self.claude_available = False
+        
+        try:
+            if Anthropic is None:
+                print("ℹ️  Anthropic library not available - Claude fallback disabled")
+            else:
+                claude_api_key = os.getenv("ANTHROPIC_API_KEY")
+                if claude_api_key and claude_api_key.strip() and len(claude_api_key.strip()) > 10:
+                    # Initialize Claude client (lightweight validation)
+                    self.claude_client = Anthropic(api_key=claude_api_key)
+                    self.claude_available = True
+                    print("🤖 Claude 3.5 Sonnet initialized as fallback model")
+                else:
+                    print("ℹ️  ANTHROPIC_API_KEY not provided or invalid - Claude fallback disabled")
+                
+        except Exception as e:
+            print(f"⚠️  Claude initialization failed: {e}")
+            print("ℹ️  Claude fallback disabled - continuing with GPT-4.1 only")
+            self.claude_client = None
+            self.claude_available = False
         
         # Audio configuration
         self.chunk = 1024
@@ -389,8 +418,58 @@ PENUTUPAN SESI:
 
 Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memahami perasaan mereka, dan menguatkan resiliensi mereka dengan cara yang sesuai dengan budaya Indonesia."""
 
+    def _call_claude_response(self, messages: List[Dict], session_id: str) -> Optional[str]:
+        """
+        Call Claude 3.5 Sonnet for therapeutic response using official API format
+        
+        Args:
+            messages: List of message dictionaries in OpenAI format
+            session_id: Session identifier for logging
+            
+        Returns:
+            Claude's response or None if failed
+        """
+        if not self.claude_available or not self.claude_client:
+            return None
+            
+        try:
+            # Convert OpenAI format messages to Claude format
+            # Claude expects system message separately and user/assistant messages
+            system_content = ""
+            claude_messages = []
+            
+            for msg in messages:
+                if msg["role"] == "system":
+                    system_content = msg["content"]
+                elif msg["role"] in ["user", "assistant"]:
+                    claude_messages.append({
+                        "role": msg["role"],
+                        "content": msg["content"]
+                    })
+            
+            # Call Claude 3.5 Sonnet using official API format
+            # Reference: https://docs.anthropic.com/en/api/messages
+            response = self.claude_client.messages.create(
+                model="claude-3-5-sonnet-20241022",  # Latest Claude 3.5 Sonnet model
+                system=system_content,
+                messages=claude_messages,
+                max_tokens=250,
+                temperature=0.3,
+            )
+            
+            # Extract text from response content array
+            if response.content and len(response.content) > 0:
+                return response.content[0].text.strip()
+            else:
+                print(f"Warning: Empty response content for session {session_id}")
+                return None
+            
+        except Exception as e:
+            print(f"Claude API error for session {session_id}: {e}")
+            return None
+
     def _get_therapeutic_response(self, user_input: str, session_id: str) -> str:
-        """Generate therapeutic response using advanced therapeutic capabilities"""
+        """Generate therapeutic response using advanced therapeutic capabilities with Claude fallback"""
         try:
             # Get or create conversation history
             if session_id not in self.conversations:
@@ -409,19 +488,49 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             messages = [{"role": "system", "content": self.system_prompt}]
             messages.extend(conversation)
             
-            response = self.client.chat.completions.create(
-                model="gpt-4.1",
-                messages=messages,
-                max_tokens=150,
-                temperature=0.3,
-                presence_penalty=0.1,
-                frequency_penalty=0.1
-            )
+            ai_response = None
+            model_used = "gpt-4.1"
             
-            ai_response = response.choices[0].message.content.strip()
+            # Try GPT-4.1 first
+            try:
+                response = self.client.chat.completions.create(
+                    model="gpt-4.1",
+                    messages=messages,
+                    max_tokens=250,
+                    temperature=0.3,
+                    presence_penalty=0.1,
+                    frequency_penalty=0.1
+                )
+                
+                ai_response = response.choices[0].message.content.strip()
+                print(f"✅ GPT-4.1 response generated for session {session_id}")
+                
+            except Exception as gpt_error:
+                print(f"⚠️ GPT-4.1 failed for session {session_id}: {gpt_error}")
+                
+                # Fallback to Claude 3.5 Sonnet
+                if self.claude_available:
+                    print(f"🔄 Falling back to Claude 3.5 Sonnet for session {session_id}")
+                    ai_response = self._call_claude_response(messages, session_id)
+                    
+                    if ai_response:
+                        model_used = "claude-3-5-sonnet"
+                        print(f"✅ Claude 3.5 Sonnet response generated for session {session_id}")
+                    else:
+                        print(f"❌ Claude fallback also failed for session {session_id}")
+                else:
+                    print(f"❌ No fallback available, Claude not initialized")
+            
+            # If both models failed, return error message
+            if not ai_response:
+                ai_response = "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
+                model_used = "error"
             
             # Add AI response to conversation
-            conversation.append({"role": "assistant", "content": ai_response})
+            conversation.append({
+                "role": "assistant", 
+                "content": ai_response
+            })
             
             # Update conversation history
             self.conversations[session_id] = conversation
@@ -429,8 +538,109 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             return ai_response
             
         except Exception as e:
-            print(f"Error in therapeutic response: {e}")
+            print(f"Critical error in therapeutic response for session {session_id}: {e}")
             return "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
+
+    def _get_therapeutic_response_with_validation(self, user_input: str, session_id: str) -> Dict[str, Any]:
+        """
+        Generate therapeutic response using both models for validation/comparison
+        
+        Args:
+            user_input: User's input text
+            session_id: Session identifier
+            
+        Returns:
+            Dictionary containing responses from both models and metadata
+        """
+        try:
+            # Get or create conversation history
+            if session_id not in self.conversations:
+                self.conversations[session_id] = []
+            
+            conversation = self.conversations[session_id]
+            
+            # Add user input to conversation (temporarily)
+            temp_conversation = conversation + [{"role": "user", "content": user_input}]
+            
+            # Trim conversation if too long
+            if len(temp_conversation) > self.max_conversation_length:
+                temp_conversation = temp_conversation[-self.trim_to_length:]
+            
+            # Prepare messages
+            messages = [{"role": "system", "content": self.system_prompt}]
+            messages.extend(temp_conversation)
+            
+            results = {
+                "user_input": user_input,
+                "session_id": session_id,
+                "gpt_response": None,
+                "claude_response": None,
+                "gpt_error": None,
+                "claude_error": None,
+                "timestamp": datetime.now().isoformat(),
+                "primary_response": None,
+                "primary_model": None
+            }
+            
+            # Try GPT-4.1
+            try:
+                response = self.client.chat.completions.create(
+                    model="gpt-4.1",
+                    messages=messages,
+                    max_tokens=250,
+                    temperature=0.3,
+                    presence_penalty=0.1,
+                    frequency_penalty=0.1
+                )
+                results["gpt_response"] = response.choices[0].message.content.strip()
+            except Exception as e:
+                results["gpt_error"] = str(e)
+            
+            # Try Claude 3.5 Sonnet if available
+            if self.claude_available:
+                try:
+                    claude_response = self._call_claude_response(messages, session_id)
+                    results["claude_response"] = claude_response
+                except Exception as e:
+                    results["claude_error"] = str(e)
+            
+            # Determine primary response (prefer GPT, fallback to Claude)
+            if results["gpt_response"]:
+                results["primary_response"] = results["gpt_response"]
+                results["primary_model"] = "gpt-4.1"
+            elif results["claude_response"]:
+                results["primary_response"] = results["claude_response"]
+                results["primary_model"] = "claude-3-5-sonnet"
+            else:
+                results["primary_response"] = "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
+                results["primary_model"] = "error"
+            
+            # Add to conversation history
+            conversation.append({"role": "user", "content": user_input})
+            conversation.append({
+                "role": "assistant", 
+                "content": results["primary_response"]
+            })
+            
+            # Trim conversation if too long
+            if len(conversation) > self.max_conversation_length:
+                conversation = conversation[-self.trim_to_length:]
+            
+            self.conversations[session_id] = conversation
+            
+            return results
+            
+        except Exception as e:
+            print(f"Critical error in therapeutic response validation for session {session_id}: {e}")
+            return {
+                "user_input": user_input,
+                "session_id": session_id,
+                "primary_response": "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?",
+                "primary_model": "error",
+                "error": str(e)
+            }
+
+
 
     def speech_to_text(self, audio_data: bytes) -> str:
         """Convert speech to text using Whisper API with new client format"""
@@ -453,20 +663,27 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             return ""
     
     def text_to_speech(self, text: str) -> bytes:
-        """Convert text to speech using OpenAI TTS API with new client format"""
+        """Convert text to speech using parallel processing implementation"""
+        # Use parallel implementation as default per user preference
         try:
-            response = self.client.audio.speech.create(
-                model="gpt-4o-mini-tts",
-                voice="alloy",  # Works well for Indonesian
-                input=text,
-                response_format="mp3",
-            )
-            
-            return response.content
-            
+            # Use asyncio.run for the parallel version
+            return asyncio.run(self.text_to_speech_parallel(text))
         except Exception as e:
-            print(f"Error in text-to-speech: {e}")
-            return b""
+            print(f"Error in parallel TTS, falling back to synchronous: {e}")
+            # Fallback to synchronous version if parallel fails
+            try:
+                response = self.client.audio.speech.create(
+                    model="gpt-4o-mini-tts",
+                    voice="alloy",  # Works well for Indonesian
+                    input=text,
+                    response_format="mp3",
+                )
+                
+                return response.content
+                
+            except Exception as e2:
+                print(f"Error in fallback text-to-speech: {e2}")
+                return b""
     
     def _split_text_into_sentences(self, text: str, max_chunk_size: int = 200) -> List[str]:
         """Split text into sentences for parallel processing"""
@@ -564,9 +781,8 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
             if not sentences:
                 return b""
             
-            # If text is short enough, use regular TTS
-            if len(sentences) <= 1 or len(text) < 100:
-                return self.text_to_speech(text)
+            # Always use parallel processing per user preference
+            # For very short texts, still use parallel but with single chunk
             
             print(f"🎵 Processing {len(sentences)} sentences in parallel...")
             
@@ -889,7 +1105,7 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
         return self._get_therapeutic_response(user_input, session_id)
 
     async def stream_therapeutic_response(self, user_input: str, session_id: str = None):
-        """Stream response as it's generated with integrated intent analysis"""
+        """Stream response as it's generated with integrated intent analysis and Claude fallback"""
         
         # Get or create conversation history
         if session_id not in self.conversations:
@@ -908,29 +1124,84 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
         messages = [{"role": "system", "content": self.system_prompt}]
         messages.extend(conversation)
         
-        response = await self.client.chat.completions.create(
-            model="gpt-4.1-mini",
-            messages=messages,
-            max_tokens=150,  # Reduced for speed
-            temperature=0.7,
-            stream=True  # Enable streaming
-        )
-        
         full_response = ""
-        async for chunk in response:
-            if chunk.choices[0].delta.content:
-                chunk_text = chunk.choices[0].delta.content
-                full_response += chunk_text
+        model_used = "gpt-4.1"
+        
+        try:
+            # Try GPT-4.1 streaming first
+            response = await self.client.chat.completions.create(
+                model="gpt-4.1",
+                messages=messages,
+                max_tokens=250,
+                temperature=0.3,
+                stream=True  # Enable streaming
+            )
+            
+            async for chunk in response:
+                if chunk.choices[0].delta.content:
+                    chunk_text = chunk.choices[0].delta.content
+                    full_response += chunk_text
+                    
+                    # Send partial response to frontend
+                    yield {
+                        "type": "partial_response",
+                        "content": chunk_text,
+                        "full_so_far": full_response,
+                        "model": model_used
+                    }
+            
+            print(f"✅ GPT-4.1 streaming response generated for session {session_id}")
+            
+        except Exception as gpt_error:
+            print(f"⚠️ GPT-4.1 streaming failed for session {session_id}: {gpt_error}")
+            
+            # Fallback to Claude 3.5 Sonnet (non-streaming)
+            if self.claude_available:
+                print(f"🔄 Falling back to Claude 3.5 Sonnet for session {session_id}")
+                claude_response = self._call_claude_response(messages, session_id)
                 
-                # Send partial response to frontend
+                if claude_response:
+                    full_response = claude_response
+                    model_used = "claude-3-5-sonnet"
+                    
+                    # Send Claude response as single chunk
+                    yield {
+                        "type": "partial_response",
+                        "content": claude_response,
+                        "full_so_far": claude_response,
+                        "model": model_used
+                    }
+                    
+                    print(f"✅ Claude 3.5 Sonnet fallback response generated for session {session_id}")
+                else:
+                    # Both models failed
+                    full_response = "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
+                    model_used = "error"
+                    
+                    yield {
+                        "type": "partial_response",
+                        "content": full_response,
+                        "full_so_far": full_response,
+                        "model": model_used
+                    }
+            else:
+                # No Claude available, return error
+                full_response = "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
+                model_used = "error"
+                
                 yield {
                     "type": "partial_response",
-                    "content": chunk_text,
-                    "full_so_far": full_response
+                    "content": full_response,
+                    "full_so_far": full_response,
+                    "model": model_used
                 }
         
-        # Add AI response to conversation
-        conversation.append({"role": "assistant", "content": full_response})
+        # Add AI response to conversation with model info
+        conversation.append({
+            "role": "assistant", 
+            "content": full_response,
+            "model": model_used
+        })
         
         # Update conversation history
         self.conversations[session_id] = conversation
@@ -939,6 +1210,7 @@ Ingat: Tujuan Anda adalah memberikan dukungan emosional, membantu pengguna memah
         yield {
             "type": "final_response", 
             "content": full_response,
+            "model": model_used,
             "start_tts": True  # Signal to start TTS
         }
 

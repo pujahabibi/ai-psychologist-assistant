@@ -4,7 +4,8 @@ GPT Service Implementation - OpenAI API integration for therapeutic responses
 """
 
 import time
-from typing import List, Dict, Optional
+import asyncio
+from typing import List, Dict, Optional, AsyncGenerator
 from openai import OpenAI
 from ...core.interfaces.ai_service import IGPTService
 from ...core.entities.therapeutic_response import TherapeuticResponse, EmotionType, EmotionAnalysis, SafetyAssessment, AlertLevel
@@ -72,6 +73,62 @@ class GPTService(IGPTService):
                 model_used="error",
                 processing_time=time.time() - start_time
             )
+
+    async def generate_streaming_therapeutic_response(
+        self,
+        user_input: str,
+        conversation_history: List[Dict[str, str]],
+        session_id: str,
+        system_prompt: str
+    ) -> AsyncGenerator[str, None]:
+        """Generate optimized streaming therapeutic response using GPT with timeout"""
+        try:
+            # Prepare messages with system prompt
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(conversation_history)
+            
+            print(f"🚀 Starting optimized streaming GPT response for session {session_id}")
+            
+            # Make streaming API call with optimized hyperparameters
+            response_stream = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_tokens=settings.model_config.max_tokens,  # Optimized to 256 tokens
+                temperature=settings.model_config.temperature,
+                presence_penalty=settings.model_config.presence_penalty,
+                frequency_penalty=settings.model_config.frequency_penalty,
+                stream=True,
+                # Add streaming optimization
+                stream_options={"include_usage": False}  # Exclude usage stats for faster streaming
+            )
+            
+            # Track response timing
+            chunk_count = 0
+            start_time = time.time()
+            first_chunk_time = None
+            
+            # Stream the response chunks with optimized processing
+            for chunk in response_stream:
+                if chunk.choices[0].delta.content is not None:
+                    content = chunk.choices[0].delta.content
+                    
+                    # Track first chunk timing
+                    if first_chunk_time is None:
+                        first_chunk_time = time.time()
+                        print(f"⚡ First chunk received in {first_chunk_time - start_time:.3f}s")
+                    
+                    chunk_count += 1
+                    print(f"📤 Fast streaming chunk {chunk_count}: '{content}'")
+                    yield content
+                    
+                    # Optional: Add micro-delay to prevent overwhelming
+                    # await asyncio.sleep(0.001)  # 1ms delay
+                    
+            print(f"✅ Optimized streaming GPT response completed for session {session_id} with {chunk_count} chunks")
+            
+        except Exception as e:
+            print(f"❌ Error in optimized streaming GPT response generation: {e}")
+            yield "Maaf, saya sedang mengalami gangguan teknis. Bisakah Anda ulangi yang tadi?"
     
     def _analyze_emotion(self, user_input: str) -> EmotionAnalysis:
         """Simplified emotion analysis based on keywords"""

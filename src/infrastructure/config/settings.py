@@ -19,26 +19,34 @@ class ModelConfig:
     primary_model: str = "gpt-4.1"
     fallback_model: str = "claude-3-5-sonnet-20241022"
     
-    # Original hyperparameters preserved exactly
-    max_tokens: int = 512
+    # Optimized hyperparameters for speed while preserving model name
+    max_tokens: int = 256  # Reduced from 512 for faster generation
     temperature: float = 0.3
     presence_penalty: float = 0.1
     frequency_penalty: float = 0.1
+    
+    # Streaming optimization settings
+    streaming_chunk_size: int = 1  # Process every single token for maximum speed
+    max_streaming_delay: float = 0.1  # Maximum delay between chunks (100ms)
 
 
 @dataclass
 class AudioConfig:
     """Configuration for audio processing"""
-    # Following user preference for mp3 format
-    default_format: str = "mp3"
+    # Following user preference for wav format
+    default_format: str = "wav"
     sample_rate: int = 16000
     channels: int = 1
-    chunk_size: int = 1024
+    chunk_size: int = 512  # Reduced from 1024 for faster processing
     
     # TTS settings - always use parallel processing per user preference
     use_parallel_tts: bool = True
     max_workers: int = 8
-    max_chunk_size: int = 200
+    max_chunk_size: int = 100  # Reduced from 200 for faster processing
+    
+    # Streaming audio optimization
+    streaming_buffer_size: int = 4096  # Reduced from 8192 for faster streaming
+    tts_timeout: float = 2.0  # Maximum TTS processing time per chunk
 
 
 @dataclass

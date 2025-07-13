@@ -4,7 +4,7 @@ AI Service Interfaces - Contracts for AI model services
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, AsyncGenerator
 from ..entities.therapeutic_response import TherapeuticResponse, ModelValidationResponse
 
 
@@ -47,6 +47,17 @@ class IGPTService(IAIModelService):
         """Generate therapeutic response using GPT"""
         pass
 
+    @abstractmethod
+    async def generate_streaming_therapeutic_response(
+        self,
+        user_input: str,
+        conversation_history: List[Dict[str, str]],
+        session_id: str,
+        system_prompt: str
+    ) -> AsyncGenerator[str, None]:
+        """Generate streaming therapeutic response using GPT"""
+        pass
+
 
 class IClaudeService(IAIModelService):
     """Interface for Claude service"""
@@ -86,4 +97,15 @@ class IAIOrchestrator(ABC):
         system_prompt: str
     ) -> ModelValidationResponse:
         """Get validated response from multiple models"""
+        pass
+
+    @abstractmethod
+    async def get_streaming_therapeutic_response(
+        self,
+        user_input: str,
+        conversation_history: List[Dict[str, str]],
+        session_id: str,
+        system_prompt: str
+    ) -> AsyncGenerator[str, None]:
+        """Get streaming therapeutic response with fallback logic"""
         pass 

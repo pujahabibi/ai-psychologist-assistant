@@ -4,7 +4,7 @@ Audio Service Interfaces - Contracts for audio processing services
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, AsyncGenerator
 from ..entities.audio_data import AudioData, ProcessedAudioData
 
 
@@ -24,6 +24,11 @@ class IAudioService(ABC):
     @abstractmethod
     async def text_to_speech_parallel(self, text: str, max_workers: int = 8) -> AudioData:
         """Convert text to speech using parallel processing for optimal performance"""
+        pass
+    
+    @abstractmethod
+    async def text_to_speech_streaming(self, text: str) -> AsyncGenerator[Dict[str, Any], None]:
+        """Convert text to speech with real-time streaming using OpenAI's streaming API"""
         pass
     
     @abstractmethod

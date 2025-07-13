@@ -82,14 +82,13 @@ class AudioService(IAudioService):
         try:
             # Quick check for empty audio
             if not audio_data.audio_bytes or len(audio_data.audio_bytes) < 1000:
-                return ProcessedAudioData(
-                    audio_id=audio_data.audio_id,
-                    transcription="",
-                    confidence=0.0,
-                    processing_time=time.time() - start_time,
-                    language="id"
-                )
-            
+                            return ProcessedAudioData(
+                audio_id=audio_data.audio_id,
+                transcription="",
+                confidence=0.0,
+                processing_time=time.time() - start_time,
+                language="auto"
+            )
             # Detect audio duration and apply optimization strategy
             audio_duration = await self._get_audio_duration(audio_data.audio_bytes, audio_data.format)
             
@@ -110,7 +109,7 @@ class AudioService(IAudioService):
                 transcription="",
                 confidence=0.0,
                 processing_time=time.time() - start_time,
-                language="id"
+                language="auto"
             )
     
     async def _get_audio_duration(self, audio_bytes: bytes, format: str) -> float:
@@ -139,12 +138,14 @@ class AudioService(IAudioService):
             audio_file = io.BytesIO(preprocessed_audio)
             audio_file.name = f"temp_audio.{audio_data.format}"
             
-            # Direct transcription with timeout optimization
+            # Direct transcription with auto-detection for mixed Arabic-English
             network_start = time.time()
             transcript = self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                language="id",  # Indonesian language code
+                prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
+                # No language parameter - enables auto-detection for mixed Arabic-English
+                # Whisper excels at handling code-switched languages naturally
             )
             network_time = time.time() - network_start
             
@@ -175,7 +176,7 @@ class AudioService(IAudioService):
                 transcription=transcript.text.strip(),
                 confidence=0.9,
                 processing_time=processing_time,
-                language="id"
+                language="auto"
             )
             
         except Exception as e:
@@ -214,7 +215,7 @@ class AudioService(IAudioService):
                     transcription="",
                     confidence=0.0,
                     processing_time=time.time() - start_time,
-                    language="id"
+                    language=None  # Auto-detect mixed Arabic/English
                 )
             
             print(f"🎙️ PARALLEL STT: Processing {len(chunks)} chunks ({chunk_seconds}s each)")
@@ -264,7 +265,7 @@ class AudioService(IAudioService):
                 transcription=combined_transcription,
                 confidence=0.9,
                 processing_time=processing_time,
-                language="id"
+                language=None  # Auto-detect mixed Arabic/English
             )
             
         except Exception as e:
@@ -312,7 +313,7 @@ class AudioService(IAudioService):
                     transcription="",
                     confidence=0.0,
                     processing_time=time.time() - start_time,
-                    language="id"
+                    language=None  # Auto-detect mixed Arabic/English
                 )
             
             print(f"🚀 ULTRA-FAST STT: Processing {len(chunks)} micro-chunks ({chunk_seconds}s each, 0.5s overlap)")
@@ -374,7 +375,7 @@ class AudioService(IAudioService):
                 transcription=combined_transcription,
                 confidence=0.9,
                 processing_time=processing_time,
-                language="id"
+                language=None  # Auto-detect mixed Arabic/English
             )
             
         except Exception as e:
@@ -395,11 +396,12 @@ class AudioService(IAudioService):
             # Create dedicated client for this thread
             client = OpenAI(api_key=self.api_key)
             
-            # Transcribe chunk
+            # Transcribe chunk with auto-detection for mixed languages
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=chunk_buffer,
-                language="id",
+                prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
+                # No language parameter - enables auto-detection for mixed Arabic-English
             )
             
             processing_time = time.time() - start_time
@@ -422,9 +424,9 @@ class AudioService(IAudioService):
             
             # Export chunk with compression
             chunk_buffer = io.BytesIO()
-            # Use WAV format for consistent processing per user preference [[memory:2973821]]
-            compressed_format = "wav" if format.lower() in ["wav", "m4a", "flac"] else format
-            if compressed_format == "wav":
+            # Use MP3 format for consistent processing per user preference
+            compressed_format = "mp3" if format.lower() in ["wav", "m4a", "flac"] else format
+            if compressed_format == "mp3":
                 audio_chunk.export(chunk_buffer, format=compressed_format)
             else:
                 audio_chunk.export(chunk_buffer, format=compressed_format, bitrate="64k")
@@ -441,7 +443,7 @@ class AudioService(IAudioService):
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=chunk_buffer,
-                language="id",
+                prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
             )
             network_time = time.time() - network_start
             
@@ -521,9 +523,9 @@ class AudioService(IAudioService):
             # Apply ultra-fast optimizations
             audio_segment = await self._optimize_audio_segment_ultra_fast(audio_segment)
             
-            # Export with WAV format for consistent processing per user preference [[memory:2973821]]
+            # Export with MP3 format for consistent processing per user preference
             output_buffer = io.BytesIO()
-            export_format = "wav" if format.lower() in ["wav", "m4a", "flac"] else format
+            export_format = "mp3" if format.lower() in ["wav", "m4a", "flac"] else format
             audio_segment.export(output_buffer, format=export_format)
             return output_buffer.getvalue()
             
@@ -612,7 +614,7 @@ class AudioService(IAudioService):
                 "chunk_id": 0,
                 "audio_data": AudioData(
                     audio_bytes=b"",
-                    format="wav",
+                    format="mp3",
                     duration=0.0
                 ),
                 "text": "",
@@ -631,6 +633,8 @@ class AudioService(IAudioService):
                 model="gpt-4o-mini-tts",  # Keep same model as specified
                 voice="alloy",
                 input=text,
+                language="auto",
+                instructions="Speak in a friendly and engaging tone, with a natural flow and a slight hint of warmth. Ensure you user your correct pronounciantion in Arabic Omani Dialect and English",
                 response_format="wav"  # Use WAV format per user preference [[memory:2973821]]
             ) as response:
                 
@@ -822,7 +826,7 @@ class AudioService(IAudioService):
                     client.audio.speech.create,
                     model="gpt-4o-mini-tts",
                     voice="alloy",
-                    instructions="Speak in a friendly and engaging tone, with a natural flow and a slight hint of warmth. Ensure you user your correct pronounciantion in Indonesian language",
+                    instructions="Speak in a friendly and engaging tone, with a natural flow and a slight hint of warmth. Ensure you user your correct pronounciantion in Arabic Omani Dialect and English",
                     input=text,
                     response_format="wav"
                 )

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kak Indira - Konselor Kesehatan Mental</title>
+    <title>Dr. Amina - Mental Health Counselor</title>
     <style>
         * {
             margin: 0;
@@ -561,40 +561,40 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧠 Kak Indira</h1>
-        <p class="subtitle">Konselor Kesehatan Mental yang Memahami Budaya Indonesia</p>
+        <h1>🧠 Dr. Amina</h1>
+        <p class="subtitle">Mental Health Counselor with Omani Cultural Understanding</p>
         
         <div class="crisis-banner">
-            <strong>🚨 Krisis Mental:</strong> Jika Anda memiliki pikiran untuk menyakiti diri sendiri atau orang lain, segera hubungi 
-            <strong>119 ext. 8</strong> (Hotline Kemenkes) atau <strong>021-500-454</strong> (Halo Jiwa) untuk bantuan darurat.
+            <strong>🚨 Mental Health Crisis:</strong> If you're having thoughts of harming yourself or others, please call 
+            <strong>119 ext. 8</strong> (Health Ministry Hotline) or <strong>021-500-454</strong> (Mental Health Hotline) for emergency assistance.
         </div>
         
         <div class="instructions">
-            <h3>🌟 Bagaimana Saya Dapat Membantu:</h3>
+            <h3>🌟 How I Can Help You:</h3>
             <ul>
-                <li>🎤 Klik tombol hijau untuk mulai berbicara</li>
-                <li>💬 Ceritakan perasaan atau masalah Anda dalam <strong>Bahasa Indonesia</strong></li>
-                <li>🤝 Saya akan mendengarkan dengan empati dan memberikan dukungan</li>
-                <li>🕊️ Semua percakapan bersifat rahasia dan aman</li>
-                <li>🌸 Saya memahami nilai-nilai budaya dan spiritual Indonesia</li>
+                <li>🎤 Click the green button to start speaking</li>
+                <li>💬 Share your feelings or concerns in <strong>English or Arabic</strong></li>
+                <li>🤝 I will listen with empathy and provide support</li>
+                <li>🕊️ All conversations are confidential and secure</li>
+                <li>🌸 I understand Omani cultural and Islamic values</li>
             </ul>
         </div>
 
         <div class="therapy-info">
             <p style="margin-bottom: 10px;">
-                💚 <strong>Pendekatan Terapeutik:</strong> Saya menggunakan pendekatan yang sensitif terhadap budaya Indonesia, menghormati nilai-nilai Islam, dan memahami dinamika keluarga Indonesia.
+                💚 <strong>Therapeutic Approach:</strong> I use an approach that is sensitive to Omani culture, respects Islamic values, and understands Omani family dynamics.
             </p>
             <p style="font-size: 0.9em; margin-top: 10px;">
-                🎯 <strong>Fokus Layanan:</strong> Kecemasan, depresi, stres, masalah keluarga, tekanan sosial, dan dukungan emosional.
+                🎯 <strong>Service Focus:</strong> Anxiety, depression, stress, family issues, social pressure, and emotional support.
             </p>
         </div>
 
         <div class="status idle" id="status">
-            🔊 Klik di mana saja untuk mengaktifkan audio dan mendengar sambutan dari Kak Indira
+            🔊 Click anywhere to activate audio and hear a welcome message from Dr. Amina
         </div>
 
         <div class="session-info" id="sessionInfo">
-            <p>🔄 <span id="contextInfo">Informasi sesi akan muncul di sini</span></p>
+            <p>🔄 <span id="contextInfo">Session information will appear here</span></p>
         </div>
 
 
@@ -602,17 +602,17 @@
         <div class="controls">
             <button class="record-btn" id="recordBtn">🔊</button>
             <div class="therapy-actions">
-                <button class="therapy-btn" id="clearBtn">🔄 Mulai Sesi Baru</button>
-                <button class="therapy-btn secondary" id="resourcesBtn">📞 Sumber Bantuan</button>
-                <button class="therapy-btn secondary" id="tipsBtn">💡 Tips Kesehatan Mental</button>
-                <button class="therapy-btn secondary" id="analysisBtn">📊 Analisis Terapi</button>
-                <button class="therapy-btn secondary" id="consentBtn">🛡️ Persetujuan Data</button>
+                <button class="therapy-btn" id="clearBtn">🔄 Start New Session</button>
+                <button class="therapy-btn secondary" id="resourcesBtn">📞 Help Resources</button>
+                <button class="therapy-btn secondary" id="tipsBtn">💡 Mental Health Tips</button>
+                <button class="therapy-btn secondary" id="analysisBtn">📊 Therapy Analysis</button>
+                <button class="therapy-btn secondary" id="consentBtn">🛡️ Data Consent</button>
             </div>
         </div>
         
         <!-- Analysis Panel -->
         <div class="analysis-panel" id="analysisPanel" style="display: none;">
-            <h3>🔍 Analisis Intent & Keamanan</h3>
+            <h3>🔍 Intent & Safety Analysis</h3>
             <div id="analysisContent">
                 <div id="intentAnalysis"></div>
                 <div id="safetyAssessment"></div>
@@ -622,64 +622,64 @@
         
         <!-- Crisis Resources -->
         <div class="crisis-resources" id="crisisResources">
-            <h3>🚨 Sumber Bantuan Darurat</h3>
+            <h3>🚨 Emergency Help Resources</h3>
             <div id="emergencyContacts"></div>
             <div id="professionalResources"></div>
-            <button class="therapy-btn" onclick="hideCrisisResources()">Tutup</button>
+            <button class="therapy-btn" onclick="hideCrisisResources()">Close</button>
         </div>
         
         <!-- Consent Modal -->
         <div class="consent-modal" id="consentModal">
             <div class="consent-content">
-                <h3>🛡️ Persetujuan & Perlindungan Data</h3>
+                <h3>🛡️ Consent & Data Protection</h3>
                 <div class="consent-item">
                     <label>
                         <input type="checkbox" id="consentGeneral" checked>
-                        Saya setuju untuk berpartisipasi dalam sesi terapi online ini
+                        I agree to participate in this online therapy session
                     </label>
                 </div>
                 <div class="consent-item">
                     <label>
                         <input type="checkbox" id="consentRecording">
-                        Saya setuju untuk perekaman sesi (opsional)
+                        I agree to session recording (optional)
                     </label>
                 </div>
                 <div class="consent-item">
                     <label>
                         <input type="checkbox" id="consentDataSharing">
-                        Saya setuju untuk berbagi data secara anonim untuk penelitian (opsional)
+                        I agree to share anonymized data for research (optional)
                     </label>
                 </div>
                 <div class="consent-item">
                     <label>
-                        Tingkat anonimisasi:
+                        Anonymization level:
                         <select id="anonymizationLevel">
-                            <option value="high">Tinggi (Rekomendasi)</option>
-                            <option value="medium">Sedang</option>
-                            <option value="low">Rendah</option>
+                            <option value="high">High (Recommended)</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
                         </select>
                     </label>
                 </div>
                 <div class="consent-item">
                     <label>
-                        Periode penyimpanan data:
+                        Data retention period:
                         <select id="retentionPeriod">
-                            <option value="7">7 hari</option>
-                            <option value="30" selected>30 hari</option>
-                            <option value="90">90 hari</option>
+                            <option value="7">7 days</option>
+                            <option value="30" selected>30 days</option>
+                            <option value="90">90 days</option>
                         </select>
                     </label>
                 </div>
                 <div class="consent-buttons">
-                    <button class="consent-btn accept" onclick="acceptConsent()">Setuju & Lanjutkan</button>
-                    <button class="consent-btn decline" onclick="declineConsent()">Tutup</button>
+                    <button class="consent-btn accept" onclick="acceptConsent()">Agree & Continue</button>
+                    <button class="consent-btn decline" onclick="declineConsent()">Close</button>
                 </div>
             </div>
         </div>
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Memproses dengan penuh perhatian...</p>
+            <p>Processing with full attention...</p>
         </div>
 
         <div class="error" id="error"></div>
@@ -688,7 +688,7 @@
     </div>
 
     <script>
-        class IndonesianMentalHealthBot {
+        class OmaniMentalHealthBot {
             constructor() {
                 this.isRecording = false;
                 this.mediaRecorder = null;
@@ -717,19 +717,40 @@
             }
 
             initEventListeners() {
-                this.recordBtn.addEventListener('click', async () => {
-                    // Enable audio on first interaction if not already enabled
-                    if (!this.audioEnabled) {
-                        await this.enableAudioAndPlayWelcome();
-                        return;
-                    }
+                this.recordBtn.addEventListener('click', async (event) => {
+                    console.log('🎤 Microphone button clicked!', {
+                        audioEnabled: this.audioEnabled,
+                        isRecording: this.isRecording
+                    });
                     
-                    if (this.isRecording) {
-                        this.stopRecording();
-                    } else {
-                        this.startRecording();
+                    try {
+                        // Enable audio on first interaction if not already enabled
+                        if (!this.audioEnabled) {
+                            console.log('🔊 Enabling audio for first time...');
+                            await this.enableAudioAndPlayWelcome();
+                            return;
+                        }
+                        
+                        if (this.isRecording) {
+                            console.log('⏹️ Stopping recording...');
+                            this.stopRecording();
+                        } else {
+                            console.log('🎙️ Starting recording...');
+                            await this.startRecording();
+                        }
+                    } catch (error) {
+                        console.error('❌ Error in record button click:', error);
+                        this.showError('Error with microphone: ' + error.message);
                     }
                 });
+
+                // Add click-anywhere-to-enable functionality
+                document.addEventListener('click', async (event) => {
+                    if (!this.audioEnabled && event.target !== this.recordBtn) {
+                        console.log('🔊 Enabling audio from document click...');
+                        await this.enableAudioAndPlayWelcome();
+                    }
+                }, { once: true });
 
                 this.clearBtn.addEventListener('click', () => {
                     this.clearConversation();
@@ -752,21 +773,28 @@
                 });
                 
                 // Enable audio on any user interaction
-                document.addEventListener('click', async (e) => {
-                    if (!this.audioEnabled && e.target.closest('.container')) {
-                        await this.enableAudioAndPlayWelcome();
-                    }
-                }, { once: true });
+                // document.addEventListener('click', async (e) => {
+                //     if (!this.audioEnabled && e.target.closest('.container')) {
+                //         await this.enableAudioAndPlayWelcome();
+                //     }
+                // }, { once: true });
             }
 
             async initializeAudioAndWelcome() {
+                console.log('🚀 Initializing audio and welcome...');
+                
                 // Show prompt to enable audio
-                this.status.textContent = '🔊 Klik di mana saja untuk mengaktifkan audio dan mendengar sambutan dari Kak Indira';
+                this.status.textContent = '🔊 Click anywhere to activate audio and hear a welcome message from Dr. Amina';
                 this.status.className = 'status idle';
                 
                 // Show a visual indicator that audio is not yet enabled
                 this.recordBtn.textContent = '🔊';
                 this.recordBtn.style.background = 'linear-gradient(45deg, #74b9ff, #0984e3)';
+                this.recordBtn.disabled = false; // Ensure button is enabled
+                this.recordBtn.style.pointerEvents = 'auto'; // Ensure button is clickable
+                this.recordBtn.style.cursor = 'pointer';
+                
+                console.log('✅ Button initialized and ready for clicks');
             }
 
             async enableAudioAndPlayWelcome() {
@@ -792,7 +820,7 @@
                     
                 } catch (error) {
                     console.error('Failed to enable audio:', error);
-                    this.status.textContent = 'Audio tidak dapat diaktifkan. Gunakan mode teks.';
+                    this.status.textContent = 'Audio could not be activated. Please use text mode.';
                     this.status.className = 'status idle';
                     
                     // Show welcome message without audio as fallback
@@ -804,15 +832,17 @@
             }
 
             async showWelcomeMessage() {
-                // Add welcome message from therapist with auto-generated voice
-                const welcomeMessage = `Assalamualaikum dan selamat datang. Saya Kak Indira, konselor kesehatan mental yang akan 
-                mendengarkan Anda dengan penuh empati dan memberikan dukungan yang Anda butuhkan. Apa ada yang bisa saya bantu ?`;
+                // Add welcome message from therapist with mixed language support
+                const welcomeMessage = `أهلاً وسهلاً! Assalamu alaikum and welcome! I'm Dr. Amina, your mental health counselor. 
+                You can speak to me in Arabic, English, or naturally mix both languages - كيف ما يريحك. 
+                Whether you say "I'm feeling stressed" or "أنا متوتر" or "Today I'm مو مبسوط", I'll understand completely. 
+                What can I help you with today? شنو اللي يمكن أساعدك فيه؟`;
 
                 try {
                     // Only generate TTS if audio is enabled
                     if (this.audioEnabled) {
                         // Show loading status
-                        this.status.textContent = 'Kak Indira sedang mempersiapkan sambutan... 🎤';
+                        this.status.textContent = 'Dr. Amina is preparing a welcome message... 🎤';
                         this.status.className = 'status loading';
                         
                         // Generate TTS for welcome message
@@ -837,13 +867,13 @@
                             // Fallback: show message without audio if TTS fails
                             console.warn('TTS failed for welcome message, showing text only');
                             await this.addMessage(welcomeMessage, 'assistant');
-                            this.status.textContent = 'Siap mendengarkan Anda. Klik tombol hijau untuk berbicara.';
+                            this.status.textContent = 'Ready to listen. Click the green button to speak.';
                             this.status.className = 'status idle';
                         }
                     } else {
                         // Show message without audio if audio not enabled
                         await this.addMessage(welcomeMessage, 'assistant');
-                        this.status.textContent = 'Siap mendengarkan Anda. Klik tombol hijau untuk berbicara.';
+                        this.status.textContent = 'Ready to listen. Click the green button to speak.';
                         this.status.className = 'status idle';
                     }
                     
@@ -851,7 +881,7 @@
                     console.error('Error generating welcome voice:', error);
                     // Fallback: show message without audio if error occurs
                     await this.addMessage(welcomeMessage, 'assistant');
-                    this.status.textContent = 'Siap mendengarkan Anda. Klik tombol hijau untuk berbicara.';
+                    this.status.textContent = 'Ready to listen. Click the green button to speak.';
                     this.status.className = 'status idle';
                 }
             }
@@ -881,11 +911,11 @@
                     
                     this.recordBtn.textContent = '⏹️';
                     this.recordBtn.classList.add('recording');
-                    this.status.textContent = 'Saya mendengarkan Anda... Klik berhenti jika sudah selesai berbicara.';
+                    this.status.textContent = 'I\'m listening to you... Click stop when you\'re done speaking.';
                     this.status.className = 'status recording';
                     
                 } catch (error) {
-                    this.showError('Maaf, tidak dapat mengakses mikrofon: ' + error.message);
+                    this.showError('Sorry, cannot access microphone: ' + error.message);
                 }
             }
 
@@ -896,7 +926,7 @@
                     
                     this.recordBtn.textContent = '🎤';
                     this.recordBtn.classList.remove('recording');
-                    this.status.textContent = 'Memproses dengan penuh perhatian...';
+                    this.status.textContent = 'Processing with full attention...';
                     this.status.className = 'status processing';
                     
                     this.showLoading(true);
@@ -932,18 +962,18 @@
                         this.addMessage(data.user_text, 'user');
                         
                         // Auto-play assistant response
-                        this.status.textContent = 'Kak Indira sedang berbicara... 🗣️';
+                        this.status.textContent = 'Dr. Amina is speaking... 🗣️';
                         this.status.className = 'status speaking';
                         
                         await this.addMessage(data.ai_response, 'assistant', data.audio_url, latency);
                         
                     } else {
-                        this.showError(data.error || 'Terjadi kesalahan dalam memproses permintaan Anda.');
+                        this.showError(data.error || 'An error occurred while processing your request.');
                     }
                     
                 } catch (error) {
-                    this.showError('Maaf, terjadi kesalahan teknis: ' + error.message);
-                    this.status.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                    this.showError('Sorry, a technical error occurred: ' + error.message);
+                    this.status.textContent = 'An error occurred. Please try again.';
                     this.status.className = 'status idle';
                 } finally {
                     this.showLoading(false);
@@ -959,7 +989,7 @@
                     const latencyClass = latency < 5 ? 'fast' : latency < 10 ? 'medium' : 'slow';
                     const status = latency < 20 ? '✅' : '⚠️';
                     latencyDisplay = `<div class="latency-info ${latencyClass}">
-                        ${status} Waktu respons: ${latency.toFixed(2)}s
+                        ${status} Response time: ${latency.toFixed(2)}s
                     </div>`;
                 }
                 
@@ -970,7 +1000,7 @@
                 </audio>` : '';
                 
                 messageDiv.innerHTML = `
-                    <p><strong>${sender === 'user' ? 'Anda' : 'Kak Indira'}:</strong> ${text}</p>
+                    <p><strong>${sender === 'user' ? 'You' : 'Dr. Amina'}:</strong> ${text}</p>
                     ${audioElement}
                     ${latencyDisplay}
                 `;
@@ -985,23 +1015,23 @@
                         try {
                             // Add event listeners
                             audio.addEventListener('loadstart', () => {
-                                this.status.textContent = 'Memuat audio respons... 🔄';
+                                this.status.textContent = 'Loading audio response... 🔄';
                                 this.status.className = 'status loading';
                             });
                             
                             audio.addEventListener('canplay', () => {
-                                this.status.textContent = 'Kak Indira sedang berbicara... 🗣️';
+                                this.status.textContent = 'Dr. Amina is speaking... 🗣️';
                                 this.status.className = 'status speaking';
                             });
                             
                             audio.addEventListener('ended', () => {
-                                this.status.textContent = 'Siap mendengarkan Anda lagi. Klik tombol hijau untuk berbicara.';
+                                this.status.textContent = 'Ready to listen to you again. Click the green button to speak.';
                                 this.status.className = 'status idle';
                             });
                             
                             audio.addEventListener('error', (e) => {
                                 console.error('Audio playback error:', e);
-                                this.status.textContent = 'Siap mendengarkan Anda lagi. Klik tombol hijau untuk berbicara.';
+                                this.status.textContent = 'Ready to listen to you again. Click the green button to speak.';
                                 this.status.className = 'status idle';
                             });
                             
@@ -1014,7 +1044,7 @@
                             
                         } catch (error) {
                             console.error('Error playing audio:', error);
-                            this.status.textContent = 'Audio tidak dapat diputar otomatis. Silakan klik tombol play.';
+                            this.status.textContent = 'Audio cannot be played automatically. Please click the play button.';
                             this.status.className = 'status idle';
                             // Fallback: show controls if autoplay fails
                             audio.controls = true;
@@ -1032,7 +1062,7 @@
             updateSessionInfo() {
                 if (this.messageCount > 0) {
                     const exchanges = this.messageCount;
-                    this.contextInfo.textContent = `Sesi terapi: ${exchanges} pertukaran percakapan`;
+                    this.contextInfo.textContent = `Therapy session: ${exchanges} conversation exchanges`;
                     this.sessionInfo.style.display = 'block';
                 } else {
                     this.sessionInfo.style.display = 'none';
@@ -1042,7 +1072,7 @@
 
 
             async clearConversation() {
-                const confirm = window.confirm('Apakah Anda yakin ingin memulai sesi terapi baru? Percakapan sebelumnya akan dihapus.');
+                const confirm = window.confirm('Are you sure you want to start a new therapy session? Previous conversations will be deleted.');
                 if (!confirm) return;
 
                 try {
@@ -1066,77 +1096,77 @@
                         this.welcomePlayed = true;
                     } else {
                         // If audio not enabled, show prompt again
-                        this.status.textContent = '🔊 Klik di mana saja untuk mengaktifkan audio dan mendengar sambutan dari Kak Indira';
+                        this.status.textContent = '🔊 Click anywhere to enable audio and hear a welcome from Dr. Amina';
                         this.status.className = 'status idle';
                     }
                     
                 } catch (error) {
-                    this.showError('Gagal menghapus sesi: ' + error.message);
+                    this.showError('Failed to delete session: ' + error.message);
                 }
             }
 
             async showCrisisResources() {
                 try {
                     // Since we removed these endpoints, provide static resources
-                    let resourceText = `🚨 SUMBER BANTUAN KRISIS MENTAL:
+                    let resourceText = `🚨 MENTAL HEALTH CRISIS RESOURCES:
 
-📞 HOTLINE DARURAT:
-• Halo Jiwa: 021-500-454 (24 jam)
-• Yayasan Pulih: 021-788-42580
-• Sehat Jiwa: 119 ext. 8
+📞 EMERGENCY HOTLINES:
+• Oman Mental Health Association: 800-77077
+• Ministry of Health Hotline: 24441999
+• International SOS: +968 2459 9500
 
-🚑 LAYANAN DARURAT:
-• Polisi: 110
-• Ambulans: 118
+🚑 EMERGENCY SERVICES:
+• Police: 9999
+• Ambulance: 9999
 
-⚠️ PENTING: Jika Anda mengalami pikiran untuk menyakiti diri sendiri atau orang lain, segera hubungi layanan darurat atau datangi rumah sakit terdekat.`;
+⚠️ IMPORTANT: If you are having thoughts of harming yourself or others, please contact emergency services immediately or go to the nearest hospital.`;
 
                     await this.addMessage(resourceText, 'assistant');
                     
                 } catch (error) {
-                    this.showError('Gagal mengambil sumber bantuan: ' + error.message);
+                    this.showError('Failed to retrieve help resources: ' + error.message);
                 }
             }
 
             async showTherapyTips() {
                 try {
                     // Provide static therapy tips
-                    let tipsText = `💡 TIPS KESEHATAN MENTAL SEHARI-HARI:
+                    let tipsText = `💡 DAILY MENTAL HEALTH TIPS:
 
-🌟 PRAKTIK HARIAN:
-• Dzikir dan doa untuk ketenangan jiwa
-• Bersyukur atas nikmat yang diterima
-• Silaturahmi dengan keluarga dan teman
-• Olahraga ringan atau jalan pagi
-• Membaca Al-Quran atau buku motivasi
-• Meditasi atau refleksi diri
+🌟 DAILY PRACTICES:
+• Dhikr and dua for peace of mind
+• Express gratitude for blessings received
+• Maintain connections with family and friends
+• Light exercise or morning walks
+• Read Quran or motivational books
+• Meditation or self-reflection
 
-🛡️ STRATEGI COPING:
-• Teknik pernapasan dalam (4-4-4)
-• Journaling atau menulis perasaan
-• Mendengarkan musik yang menenangkan
-• Mencari dukungan dari komunitas
-• Berkonsultasi dengan ustadz/kyai jika diperlukan
+🛡️ COPING STRATEGIES:
+• Deep breathing technique (4-4-4)
+• Journaling or writing feelings
+• Listening to calming music
+• Seeking community support
+• Consulting with an imam if needed
 
-👨‍👩‍👧‍👦 DUKUNGAN KELUARGA:
-• Komunikasi terbuka dengan keluarga
-• Menghormati peran orang tua dan sesepuh
-• Menjaga hubungan baik dengan saudara
-• Meminta doa dan dukungan keluarga
+👨‍👩‍👧‍👦 FAMILY SUPPORT:
+• Open communication with family
+• Respecting parents and elders
+• Maintaining good relationships with siblings
+• Asking for prayers and family support
 
-🕊️ BIMBINGAN SPIRITUAL:
-• Sabar dalam menghadapi cobaan
-• Tawakal kepada Allah SWT
-• Berhusnudzon (berprasangka baik)
-• Istighfar dan taubat nasuha
-• Shalat tahajud untuk ketenangan jiwa
+🕊️ SPIRITUAL GUIDANCE:
+• Patience in facing challenges
+• Tawakkul (trust) in Allah SWT
+• Husnudzon (positive thinking)
+• Istighfar and sincere repentance
+• Tahajjud prayer for peace of mind
 
-Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar dan bersyukur dalam setiap langkah.`;
+Remember that maintaining mental health is a journey, not a destination. Be patient and grateful in every step.`;
 
                     await this.addMessage(tipsText, 'assistant');
                     
                 } catch (error) {
-                    this.showError('Gagal mengambil tips terapi: ' + error.message);
+                    this.showError('Failed to retrieve therapy tips: ' + error.message);
                 }
             }
 
@@ -1169,7 +1199,7 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
             
             async loadSessionAnalysis() {
                 if (!this.sessionId) {
-                    document.getElementById('analysisContent').innerHTML = '<p>Belum ada sesi yang aktif untuk dianalisis.</p>';
+                    document.getElementById('analysisContent').innerHTML = '<p>No active session to analyze.</p>';
                     return;
                 }
                 
@@ -1179,11 +1209,11 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
                         const analysis = await response.json();
                         this.displayAnalysis(analysis);
                     } else {
-                        document.getElementById('analysisContent').innerHTML = '<p>Belum ada data analisis untuk sesi ini.</p>';
+                        document.getElementById('analysisContent').innerHTML = '<p>No analysis data available for this session.</p>';
                     }
                 } catch (error) {
                     console.error('Error loading session analysis:', error);
-                    document.getElementById('analysisContent').innerHTML = '<p>Gagal memuat analisis sesi.</p>';
+                    document.getElementById('analysisContent').innerHTML = '<p>Failed to load session analysis.</p>';
                 }
             }
             
@@ -1191,7 +1221,7 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
                 const content = document.getElementById('analysisContent');
                 let html = `
                     <div class="analysis-item">
-                        <strong>Total Interaksi:</strong> ${analysis.total_interactions}
+                        <strong>Total Interactions:</strong> ${analysis.total_interactions}
                     </div>
                 `;
                 
@@ -1199,14 +1229,14 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
                     const alertClass = `alert-${analysis.safety_status.alert_level}`;
                     html += `
                         <div class="analysis-item">
-                            <strong>Status Keamanan:</strong> 
+                            <strong>Safety Status:</strong> 
                             <span class="alert-level ${alertClass}">${analysis.safety_status.alert_level}</span>
                         </div>
                         <div class="analysis-item">
-                            <strong>Faktor Risiko:</strong> ${analysis.safety_status.risk_factors_count}
+                            <strong>Risk Factors:</strong> ${analysis.safety_status.risk_factors_count}
                         </div>
                         <div class="analysis-item">
-                            <strong>Perlu Eskalasi:</strong> ${analysis.safety_status.requires_escalation ? 'Ya' : 'Tidak'}
+                            <strong>Requires Escalation:</strong> ${analysis.safety_status.requires_escalation ? 'Yes' : 'No'}
                         </div>
                     `;
                 }
@@ -1214,13 +1244,13 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
                 if (analysis.intent_status) {
                     html += `
                         <div class="analysis-item">
-                            <strong>Emosi Utama:</strong> ${analysis.intent_status.primary_emotion}
+                            <strong>Primary Emotion:</strong> ${analysis.intent_status.primary_emotion}
                         </div>
                         <div class="analysis-item">
-                            <strong>Konteks Terapi:</strong> ${analysis.intent_status.therapeutic_context}
+                            <strong>Therapeutic Context:</strong> ${analysis.intent_status.therapeutic_context}
                         </div>
                         <div class="analysis-item">
-                            <strong>Intensitas Emosi:</strong> ${Math.round(analysis.intent_status.emotion_intensity * 100)}%
+                            <strong>Emotion Intensity:</strong> ${Math.round(analysis.intent_status.emotion_intensity * 100)}%
                         </div>
                     `;
                 }
@@ -1282,9 +1312,9 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
                 bot.createSessionConsent().then(success => {
                     if (success) {
                         bot.hideConsentModal();
-                        bot.showMessage('Persetujuan data telah disimpan. Terima kasih!');
+                        bot.showMessage('Data consent has been saved. Thank you!');
                     } else {
-                        alert('Gagal menyimpan persetujuan. Silakan coba lagi.');
+                        alert('Failed to save consent. Please try again.');
                     }
                 });
             }
@@ -1303,7 +1333,7 @@ Ingatlah bahwa menjaga kesehatan mental adalah perjalanan, bukan tujuan. Sabar d
 
         // Initialize the mental health bot when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            window.bot = new IndonesianMentalHealthBot();
+            window.bot = new OmaniMentalHealthBot();
         });
     </script>
 </body>

@@ -74,7 +74,7 @@ class ProcessedAudioData:
     transcription: str
     confidence: float = 0.0
     processing_time: float = 0.0
-    language: str = "id"  # Indonesian by default
+    language: str = "auto"  # Auto-detect mixed Arabic-English languages for optimal transcription
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     

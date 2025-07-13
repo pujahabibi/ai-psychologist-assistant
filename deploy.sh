@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Indonesian Mental Health Support Bot - Clean Architecture Deployment Script
-# Kak Indira - Konselor Kesehatan Mental (Clean Architecture)
+# Omani Arabic Mental Health Support Bot - Clean Architecture Deployment Script
+# Dr. Amina - Counselor for Mental Health (Clean Architecture)
 
 set -e
 
-echo "🧠 Indonesian Mental Health Support Bot - Clean Architecture Deployment"
-echo "💚 Kak Indira - Konselor Kesehatan Mental (Clean Architecture)"
+echo "🧠 Omani Arabic Mental Health Support Bot - Clean Architecture Deployment"
+echo "💚 Dr. Amina - Counselor for Mental Health (Clean Architecture)"
 echo "=================================================="
 
 # Colors for output
@@ -75,7 +75,7 @@ check_env_file() {
         else
             echo -e "${BLUE}📝 Creating .env file...${NC}"
             cat > .env << 'EOF'
-# Indonesian Mental Health Support Bot Configuration (Clean Architecture)
+# Omani Arabic Mental Health Support Bot Configuration (Clean Architecture)
 # Get your API key from: https://platform.openai.com/api-keys
 OPENAI_API_KEY=your_openai_api_key_here
 
@@ -91,8 +91,8 @@ AUDIO_SAMPLE_RATE=16000
 AUDIO_CHANNELS=1
 
 # Environment Settings
-TZ=Asia/Jakarta
-LANG=id_ID.UTF-8
+TZ=Asia/Muscat
+LANG=en_US.UTF-8,ar_OM.UTF-8
 EOF
             echo -e "${GREEN}✅ .env file created${NC}"
         fi
@@ -161,15 +161,15 @@ mkdir -p static templates
 cleanup() {
     echo -e "${YELLOW}🧹 Cleaning up existing containers...${NC}"
     docker compose down 2>/dev/null || true
-    docker container rm kak-indira-mental-health-bot 2>/dev/null || true
+    docker container rm dr-amina-mental-health-bot 2>/dev/null || true
 }
 
 # Function to build and start the bot
 deploy() {
-    echo -e "${BLUE}🔨 Building Indonesian Mental Health Support Bot (Clean Architecture)...${NC}"
+    echo -e "${BLUE}🔨 Building Omani Arabic Mental Health Support Bot (Clean Architecture)...${NC}"
     docker compose build
 
-    echo -e "${BLUE}🚀 Starting Kak Indira Mental Health Bot (Clean Architecture)...${NC}"
+    echo -e "${BLUE}🚀 Starting Dr. Amina Mental Health Bot (Clean Architecture)...${NC}"
     docker compose up -d
 
     echo -e "${GREEN}✅ Clean Architecture Deployment successful!${NC}"
@@ -225,12 +225,12 @@ case "${1:-start}" in
         deploy
         ;;
     "stop")
-        echo -e "${YELLOW}🛑 Stopping Indonesian Mental Health Support Bot...${NC}"
+        echo -e "${YELLOW}🛑 Stopping Omani Arabic Mental Health Support Bot...${NC}"
         docker compose down
         echo -e "${GREEN}✅ Bot stopped successfully${NC}"
         ;;
     "restart")
-        echo -e "${YELLOW}🔄 Restarting Indonesian Mental Health Support Bot...${NC}"
+        echo -e "${YELLOW}🔄 Restarting Omani Arabic Mental Health Support Bot...${NC}"
         cleanup
         deploy
         ;;

@@ -227,7 +227,7 @@ result = await therapy_use_case.process_text_therapy(
 )
 
 # Voice-based interaction
-audio_data = AudioData(audio_bytes=audio_bytes, format="mp3")
+audio_data = AudioData(audio_bytes=audio_bytes, format="wav")
 result = await therapy_use_case.process_voice_therapy(audio_data, session_id)
 ```
 

@@ -388,7 +388,7 @@ EMERGENCY RESOURCES:
 - Ministry of Health Call Center: 24441999
 
 RESPONSE STRUCTURE:
-- Maximum 2-3 sentences per response
+- **Maximum 2-3 sentences per response**
 - Validate emotions first
 - Provide one practical technique or strategy
 - End with an open exploratory question if there's still information needed to help the user resolve their mental health issue
@@ -407,7 +407,8 @@ SESSION CLOSING:
 
 🚨 CRITICAL: NEVER USE INDONESIAN LANGUAGE - ONLY ARABIC AND ENGLISH 🚨
 
-Remember: Your goal is to provide emotional support, help users understand their feelings, and strengthen their resilience in a way that aligns with Omani culture and Islamic values - using ONLY Arabic (Omani dialect) and English languages."""
+Remember: Your goal is to provide emotional support, help users understand their feelings, and strengthen their resilience in a way that aligns with Omani culture and Islamic values - using ONLY Arabic (Omani dialect) and English languages.
+and I need you to answer it fast !!!"""
     
     def get_crisis_resources(self) -> Dict[str, Any]:
         """Get crisis resources for Oman"""

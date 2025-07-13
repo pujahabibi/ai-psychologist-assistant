@@ -143,7 +143,8 @@ class AudioService(IAudioService):
             transcript = self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
+                language="en",
+                #prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
                 # No language parameter - enables auto-detection for mixed Arabic-English
                 # Whisper excels at handling code-switched languages naturally
             )
@@ -400,7 +401,8 @@ class AudioService(IAudioService):
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=chunk_buffer,
-                prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
+                language="en",
+                #prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
                 # No language parameter - enables auto-detection for mixed Arabic-English
             )
             
@@ -443,7 +445,8 @@ class AudioService(IAudioService):
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=chunk_buffer,
-                prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
+                language="en",
+                #prompt="The user is speaking in Arabic Omani Dialect and English. Not in Indonesia anymore. Mind with the language detection and transcribe the text in the correct language.",
             )
             network_time = time.time() - network_start
             

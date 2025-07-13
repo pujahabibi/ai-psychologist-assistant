@@ -39,14 +39,14 @@ class AudioConfig:
     channels: int = 1
     chunk_size: int = 512  # Reduced from 1024 for faster processing
     
-    # TTS settings - always use parallel processing per user preference
+    # TTS settings - optimized for ultra-fast processing
     use_parallel_tts: bool = True
-    max_workers: int = 8
-    max_chunk_size: int = 100  # Reduced from 200 for faster processing
+    max_workers: int = 16  # Increased from 8 for more parallel processing
+    max_chunk_size: int = 150  # Increased from 100 for more efficient chunks
     
     # Streaming audio optimization
     streaming_buffer_size: int = 4096  # Reduced from 8192 for faster streaming
-    tts_timeout: float = 2.0  # Maximum TTS processing time per chunk
+    tts_timeout: float = 1.5  # Reduced from 2.0 for faster timeout
 
 
 @dataclass

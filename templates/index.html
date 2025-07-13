@@ -120,178 +120,6 @@
             flex-wrap: wrap;
         }
         
-        .analysis-panel {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 4px solid #00b894;
-        }
-        
-        .analysis-panel h3 {
-            color: #2d3436;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-        
-        .analysis-item {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .analysis-item strong {
-            color: #0984e3;
-        }
-        
-        .alert-level {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        .alert-green {
-            background: #d1f2eb;
-            color: #00b894;
-        }
-        
-        .alert-yellow {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .alert-orange {
-            background: #ffe8d6;
-            color: #fd7e14;
-        }
-        
-        .alert-red {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .crisis-resources {
-            background: #fff5f5;
-            border: 2px solid #fc8181;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            display: none;
-        }
-        
-        .crisis-resources.show {
-            display: block;
-        }
-        
-        .crisis-resources h3 {
-            color: #c53030;
-            margin-bottom: 15px;
-        }
-        
-        .emergency-contact {
-            background: #fed7d7;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        
-        .emergency-contact strong {
-            color: #c53030;
-        }
-        
-        .toggle-analysis {
-            background: linear-gradient(45deg, #a29bfe, #6c5ce7);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 12px;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-        
-        .toggle-analysis:hover {
-            transform: translateY(-1px);
-        }
-        
-        .consent-modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-        }
-        
-        .consent-modal.show {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .consent-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            max-width: 500px;
-            width: 90%;
-            text-align: left;
-        }
-        
-        .consent-content h3 {
-            color: #2d3436;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .consent-item {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .consent-item label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        
-        .consent-item input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-        
-        .consent-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        
-        .consent-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .consent-btn.accept {
-            background: #00b894;
-            color: white;
-        }
-        
-        .consent-btn.decline {
-            background: #ddd;
-            color: #666;
-        }
-
         .therapy-btn {
             background: linear-gradient(45deg, #74b9ff, #0984e3);
             color: white;
@@ -557,10 +385,393 @@
                 max-width: 300px;
             }
         }
+
+        /* HIPAA Consent Modal Styles */
+        .consent-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .consent-overlay.hidden {
+            display: none;
+        }
+
+        .consent-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            max-height: 90vh;
+            width: 100%;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .consent-header {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 25px;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+
+        .consent-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .consent-subtitle {
+            margin: 0;
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .consent-content {
+            padding: 30px;
+        }
+
+        .important-notice {
+            background: #fef2f2;
+            border: 2px solid #fca5a5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .important-notice h3 {
+            color: #dc2626;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+        }
+
+        .important-notice ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .important-notice li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .privacy-details {
+            margin: 25px 0;
+        }
+
+        .privacy-details h3 {
+            color: #1f2937;
+            margin: 0 0 20px 0;
+            font-size: 1.3em;
+        }
+
+        .privacy-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .privacy-section h4 {
+            color: #374151;
+            margin: 0 0 12px 0;
+            font-size: 1.1em;
+        }
+
+        .privacy-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .privacy-section li {
+            margin: 6px 0;
+            line-height: 1.4;
+        }
+
+        .consent-agreements {
+            margin: 30px 0;
+        }
+
+        .consent-agreements h3 {
+            color: #1f2937;
+            margin: 0 0 20px 0;
+            font-size: 1.3em;
+        }
+
+        .consent-checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+            cursor: pointer;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .consent-checkbox-item:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .consent-checkbox-item.checked {
+            background: #ecfdf5;
+            border-color: #10b981;
+        }
+
+        .consent-checkbox-item input[type="checkbox"] {
+            margin-right: 15px;
+            margin-top: 2px;
+            transform: scale(1.3);
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .consent-text {
+            flex: 1;
+            font-size: 0.95em;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .consent-text strong {
+            color: #1f2937;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .consent-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .consent-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+
+        .decline-btn {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 2px solid #d1d5db;
+        }
+
+        .decline-btn:hover {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .accept-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .accept-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .accept-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .consent-footer {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .consent-footer p {
+            margin: 8px 0;
+        }
+
+        /* Disable main container when consent not given */
+        .main-container-disabled {
+            pointer-events: none;
+            opacity: 0.3;
+            user-select: none;
+        }
+
+        /* Mobile responsive for consent modal */
+        @media (max-width: 768px) {
+            .consent-overlay {
+                padding: 10px;
+            }
+            
+            .consent-modal {
+                max-height: 95vh;
+            }
+            
+            .consent-header {
+                padding: 20px;
+            }
+            
+            .consent-header h2 {
+                font-size: 1.5em;
+            }
+            
+            .consent-content {
+                padding: 20px;
+            }
+            
+            .consent-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .consent-btn {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .consent-checkbox-item {
+                padding: 12px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- HIPAA Consent Modal - Blocks all functionality until consent given -->
+    <div class="consent-overlay" id="consentOverlay">
+        <div class="consent-modal">
+            <div class="consent-header">
+                <h2>🔒 HIPAA Privacy Notice & Consent</h2>
+                <p class="consent-subtitle">Required before using Dr. Amina Mental Health Support</p>
+            </div>
+            
+            <div class="consent-content">
+                <div class="important-notice">
+                    <h3>⚠️ Important Information</h3>
+                    <ul>
+                        <li><strong>AI Assistant:</strong> Dr. Amina is an AI-powered assistant, NOT a licensed therapist or medical professional</li>
+                        <li><strong>Emergency:</strong> For mental health crises, contact emergency services: <strong>119 ext. 8</strong> or <strong>021-500-454</strong></li>
+                        <li><strong>Professional Help:</strong> This service does not replace professional mental health treatment</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-details">
+                    <h3>🛡️ Data Protection & Privacy</h3>
+                    <div class="privacy-section">
+                        <h4>What Data We Collect:</h4>
+                        <ul>
+                            <li>Voice recordings (temporarily processed for AI responses)</li>
+                            <li>Text conversations (for therapeutic interaction)</li>
+                            <li>Anonymous session ID (no personal identification)</li>
+                            <li>Technical logs (for system maintenance only)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="privacy-section">
+                        <h4>What We DON'T Collect:</h4>
+                        <ul>
+                            <li>❌ Your real name, email, or phone number</li>
+                            <li>❌ Location data or device tracking</li>
+                            <li>❌ Insurance or payment information</li>
+                            <li>❌ Social media or personal accounts</li>
+                        </ul>
+                    </div>
+
+                    <div class="privacy-section">
+                        <h4>Data Protection Measures:</h4>
+                        <ul>
+                            <li>🔐 All data encrypted during transmission (HTTPS/TLS)</li>
+                            <li>⏰ Automatic deletion after 30 days maximum</li>
+                            <li>🚫 No data sharing with third parties</li>
+                            <li>📋 Audit logging for compliance</li>
+                            <li>🔒 Anonymous user identification only</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="consent-agreements">
+                    <h3>📋 Required Consent Items</h3>
+                    
+                    <label class="consent-checkbox-item">
+                        <input type="checkbox" id="aiUnderstanding" required>
+                        <span class="checkmark"></span>
+                        <div class="consent-text">
+                            <strong>AI Assistant Understanding:</strong> I understand that Dr. Amina is an artificial intelligence assistant and not a licensed mental health professional, therapist, or medical doctor.
+                        </div>
+                    </label>
+
+                    <label class="consent-checkbox-item">
+                        <input type="checkbox" id="dataProcessingConsent" required>
+                        <span class="checkmark"></span>
+                        <div class="consent-text">
+                            <strong>Data Processing Consent:</strong> I consent to the temporary processing of my voice recordings and text conversations for the purpose of generating AI-powered therapeutic responses.
+                        </div>
+                    </label>
+
+                    <label class="consent-checkbox-item">
+                        <input type="checkbox" id="dataRetentionConsent" required>
+                        <span class="checkmark"></span>
+                        <div class="consent-text">
+                            <strong>Data Retention Understanding:</strong> I understand that my conversation data will be stored temporarily and automatically deleted within 30 days, and that I can request deletion at any time.
+                        </div>
+                    </label>
+
+                    <label class="consent-checkbox-item">
+                        <input type="checkbox" id="emergencyUnderstanding" required>
+                        <span class="checkmark"></span>
+                        <div class="consent-text">
+                            <strong>Emergency Protocol:</strong> I understand that this service is not for mental health emergencies, and I will contact emergency services (119 ext. 8 or 021-500-454) if I have thoughts of self-harm or crisis situations.
+                        </div>
+                    </label>
+
+                    <label class="consent-checkbox-item">
+                        <input type="checkbox" id="voluntaryParticipation" required>
+                        <span class="checkmark"></span>
+                        <div class="consent-text">
+                            <strong>Voluntary Participation:</strong> I am voluntarily using this AI mental health support service and can discontinue use at any time.
+                        </div>
+                    </label>
+                </div>
+
+                <div class="consent-actions">
+                    <button class="consent-btn decline-btn" id="declineConsent">
+                        ❌ Decline - I do not agree
+                    </button>
+                    <button class="consent-btn accept-btn" id="acceptConsent" disabled>
+                        ✅ Accept All & Continue
+                    </button>
+                </div>
+
+                <div class="consent-footer">
+                    <p><small>By accepting, you acknowledge reading and understanding this HIPAA privacy notice and consent to the described data processing practices.</small></p>
+                    <p><small>Last updated: January 2025 | Version: 1.0</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
         <h1>🧠 Dr. Amina</h1>
         <p class="subtitle">Mental Health Counselor with Omani Cultural Understanding</p>
         
@@ -603,80 +814,9 @@
             <button class="record-btn" id="recordBtn">🔊</button>
             <div class="therapy-actions">
                 <button class="therapy-btn" id="clearBtn">🔄 Start New Session</button>
-                <button class="therapy-btn secondary" id="resourcesBtn">📞 Help Resources</button>
-                <button class="therapy-btn secondary" id="tipsBtn">💡 Mental Health Tips</button>
-                <button class="therapy-btn secondary" id="analysisBtn">📊 Therapy Analysis</button>
-                <button class="therapy-btn secondary" id="consentBtn">🛡️ Data Consent</button>
             </div>
         </div>
         
-        <!-- Analysis Panel -->
-        <div class="analysis-panel" id="analysisPanel" style="display: none;">
-            <h3>🔍 Intent & Safety Analysis</h3>
-            <div id="analysisContent">
-                <div id="intentAnalysis"></div>
-                <div id="safetyAssessment"></div>
-                <div id="therapeuticRecommendations"></div>
-            </div>
-        </div>
-        
-        <!-- Crisis Resources -->
-        <div class="crisis-resources" id="crisisResources">
-            <h3>🚨 Emergency Help Resources</h3>
-            <div id="emergencyContacts"></div>
-            <div id="professionalResources"></div>
-            <button class="therapy-btn" onclick="hideCrisisResources()">Close</button>
-        </div>
-        
-        <!-- Consent Modal -->
-        <div class="consent-modal" id="consentModal">
-            <div class="consent-content">
-                <h3>🛡️ Consent & Data Protection</h3>
-                <div class="consent-item">
-                    <label>
-                        <input type="checkbox" id="consentGeneral" checked>
-                        I agree to participate in this online therapy session
-                    </label>
-                </div>
-                <div class="consent-item">
-                    <label>
-                        <input type="checkbox" id="consentRecording">
-                        I agree to session recording (optional)
-                    </label>
-                </div>
-                <div class="consent-item">
-                    <label>
-                        <input type="checkbox" id="consentDataSharing">
-                        I agree to share anonymized data for research (optional)
-                    </label>
-                </div>
-                <div class="consent-item">
-                    <label>
-                        Anonymization level:
-                        <select id="anonymizationLevel">
-                            <option value="high">High (Recommended)</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="consent-item">
-                    <label>
-                        Data retention period:
-                        <select id="retentionPeriod">
-                            <option value="7">7 days</option>
-                            <option value="30" selected>30 days</option>
-                            <option value="90">90 days</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="consent-buttons">
-                    <button class="consent-btn accept" onclick="acceptConsent()">Agree & Continue</button>
-                    <button class="consent-btn decline" onclick="declineConsent()">Close</button>
-                </div>
-            </div>
-        </div>
-
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>Processing with full attention...</p>
@@ -688,6 +828,265 @@
     </div>
 
     <script>
+        // HIPAA Consent Management System
+        class HIPAAConsentManager {
+            constructor() {
+                this.consentGiven = false;
+                this.consentData = {};
+                this.consentTimestamp = null;
+                
+                // DOM elements
+                this.consentOverlay = document.getElementById('consentOverlay');
+                this.mainContainer = document.getElementById('mainContainer');
+                this.acceptBtn = document.getElementById('acceptConsent');
+                this.declineBtn = document.getElementById('declineConsent');
+                
+                // Checkbox elements
+                this.checkboxes = {
+                    aiUnderstanding: document.getElementById('aiUnderstanding'),
+                    dataProcessingConsent: document.getElementById('dataProcessingConsent'),
+                    dataRetentionConsent: document.getElementById('dataRetentionConsent'),
+                    emergencyUnderstanding: document.getElementById('emergencyUnderstanding'),
+                    voluntaryParticipation: document.getElementById('voluntaryParticipation')
+                };
+                
+                this.initializeConsentSystem();
+            }
+            
+            initializeConsentSystem() {
+                console.log('🔒 Initializing HIPAA Consent System');
+                
+                // Check if consent was previously given (session-based, not persistent)
+                const sessionConsent = sessionStorage.getItem('hipaa_consent_given');
+                if (sessionConsent) {
+                    const consentData = JSON.parse(sessionConsent);
+                    if (this.isConsentValid(consentData)) {
+                        this.consentGiven = true;
+                        this.hideConsentModal();
+                        this.enableMainApp();
+                        return;
+                    }
+                }
+                
+                // Show consent modal and disable main app
+                this.showConsentModal();
+                this.disableMainApp();
+                
+                // Add event listeners
+                this.addEventListeners();
+            }
+            
+            addEventListeners() {
+                // Checkbox change events
+                Object.values(this.checkboxes).forEach(checkbox => {
+                    checkbox.addEventListener('change', () => this.validateAllConsents());
+                });
+                
+                // Button events
+                this.acceptBtn.addEventListener('click', () => this.handleAcceptConsent());
+                this.declineBtn.addEventListener('click', () => this.handleDeclineConsent());
+                
+                // Visual feedback for checkboxes
+                Object.values(this.checkboxes).forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const item = e.target.closest('.consent-checkbox-item');
+                        if (e.target.checked) {
+                            item.classList.add('checked');
+                        } else {
+                            item.classList.remove('checked');
+                        }
+                    });
+                });
+            }
+            
+            validateAllConsents() {
+                const allChecked = Object.values(this.checkboxes).every(checkbox => checkbox.checked);
+                
+                this.acceptBtn.disabled = !allChecked;
+                
+                if (allChecked) {
+                    this.acceptBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    this.acceptBtn.style.cursor = 'pointer';
+                } else {
+                    this.acceptBtn.style.background = '#9ca3af';
+                    this.acceptBtn.style.cursor = 'not-allowed';
+                }
+                
+                return allChecked;
+            }
+            
+            handleAcceptConsent() {
+                if (!this.validateAllConsents()) {
+                    this.showConsentError('Please check all required consent items before proceeding.');
+                    return;
+                }
+                
+                // Generate consent data
+                this.consentData = {
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    ipAddress: 'hidden_for_privacy', // Will be logged server-side
+                    consentVersion: '1.0',
+                    consentItems: {
+                        aiUnderstanding: this.checkboxes.aiUnderstanding.checked,
+                        dataProcessingConsent: this.checkboxes.dataProcessingConsent.checked,
+                        dataRetentionConsent: this.checkboxes.dataRetentionConsent.checked,
+                        emergencyUnderstanding: this.checkboxes.emergencyUnderstanding.checked,
+                        voluntaryParticipation: this.checkboxes.voluntaryParticipation.checked
+                    },
+                    sessionId: this.generateSessionId(),
+                    consentMethod: 'web_interface'
+                };
+                
+                this.consentTimestamp = new Date();
+                this.consentGiven = true;
+                
+                // Store in session storage (not localStorage for privacy)
+                sessionStorage.setItem('hipaa_consent_given', JSON.stringify(this.consentData));
+                
+                // Log consent for HIPAA audit trail
+                this.logConsentForAudit();
+                
+                // Hide modal and enable app
+                this.hideConsentModal();
+                this.enableMainApp();
+                
+                // Small delay to ensure everything is properly initialized
+                setTimeout(() => {
+                    console.log('✅ HIPAA Consent Successfully Granted - App Ready', this.consentData);
+                }, 100);
+                
+                console.log('✅ HIPAA Consent Successfully Granted', this.consentData);
+            }
+            
+            handleDeclineConsent() {
+                // Log declined consent
+                const declineData = {
+                    timestamp: new Date().toISOString(),
+                    action: 'consent_declined',
+                    userAgent: navigator.userAgent
+                };
+                
+                console.log('❌ HIPAA Consent Declined', declineData);
+                
+                // Show decline message and redirect or close
+                this.showDeclineMessage();
+            }
+            
+            showDeclineMessage() {
+                alert('Thank you for your time. Since consent is required to use this mental health support service, you will now be redirected away from the application.\n\nIf you change your mind, you can return and provide consent at any time.');
+                
+                // Redirect to a safe page or close window
+                window.location.href = 'about:blank';
+            }
+            
+            showConsentError(message) {
+                // Create temporary error message
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #fee2e2;
+                    border: 2px solid #fca5a5;
+                    color: #dc2626;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    z-index: 10001;
+                    font-weight: 600;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+                errorDiv.textContent = message;
+                
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(() => {
+                    document.body.removeChild(errorDiv);
+                }, 5000);
+            }
+            
+            generateSessionId() {
+                return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            }
+            
+            isConsentValid(consentData) {
+                if (!consentData || !consentData.timestamp) return false;
+                
+                // Check if consent is within current session (expires when browser closes)
+                const consentTime = new Date(consentData.timestamp);
+                const now = new Date();
+                const hoursDiff = (now - consentTime) / (1000 * 60 * 60);
+                
+                // Consent valid for 8 hours or current session, whichever is shorter
+                return hoursDiff < 8 && consentData.consentItems && 
+                       Object.values(consentData.consentItems).every(item => item === true);
+            }
+            
+            logConsentForAudit() {
+                // HIPAA Audit Log Entry
+                const auditEntry = {
+                    eventType: 'HIPAA_CONSENT_GRANTED',
+                    timestamp: this.consentData.timestamp,
+                    sessionId: this.consentData.sessionId,
+                    consentVersion: this.consentData.consentVersion,
+                    ipAddress: 'logged_server_side', // Actual IP logged server-side
+                    userAgent: navigator.userAgent.substring(0, 100), // Truncated for privacy
+                    consentMethod: 'web_interface_checkbox',
+                    dataMinimization: true,
+                    anonymousUser: true
+                };
+                
+                // Log to console for development (in production, send to secure audit server)
+                console.log('📋 HIPAA Audit Log:', auditEntry);
+                
+                // In production, you would send this to your secure audit endpoint:
+                // fetch('/audit/consent', { method: 'POST', body: JSON.stringify(auditEntry) });
+            }
+            
+            showConsentModal() {
+                this.consentOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+            
+            hideConsentModal() {
+                this.consentOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            }
+            
+            disableMainApp() {
+                this.mainContainer.classList.add('main-container-disabled');
+            }
+            
+            enableMainApp() {
+                this.mainContainer.classList.remove('main-container-disabled');
+                
+                // Ensure the bot is properly initialized after consent
+                if (window.bot) {
+                    window.bot.reinitializeAfterConsent();
+                }
+            }
+            
+            // Public methods for other components
+            hasValidConsent() {
+                return this.consentGiven && this.consentData && this.isConsentValid(this.consentData);
+            }
+            
+            getConsentData() {
+                return this.hasValidConsent() ? this.consentData : null;
+            }
+            
+            revokeConsent() {
+                this.consentGiven = false;
+                this.consentData = {};
+                sessionStorage.removeItem('hipaa_consent_given');
+                this.showConsentModal();
+                this.disableMainApp();
+                
+                console.log('🔄 HIPAA Consent Revoked - User must re-consent');
+            }
+        }
+
         class OmaniMentalHealthBot {
             constructor() {
                 this.isRecording = false;
@@ -701,10 +1100,6 @@
                 
                 this.recordBtn = document.getElementById('recordBtn');
                 this.clearBtn = document.getElementById('clearBtn');
-                this.resourcesBtn = document.getElementById('resourcesBtn');
-                this.tipsBtn = document.getElementById('tipsBtn');
-                this.analysisBtn = document.getElementById('analysisBtn');
-                this.consentBtn = document.getElementById('consentBtn');
                 this.status = document.getElementById('status');
                 this.conversation = document.getElementById('conversation');
                 this.loading = document.getElementById('loading');
@@ -712,16 +1107,66 @@
                 this.sessionInfo = document.getElementById('sessionInfo');
                 this.contextInfo = document.getElementById('contextInfo');
                 
-                this.initEventListeners();
+                // Wait for consent manager to be available
+                this.consentManager = null;
+                this.initializeAfterConsent();
+            }
+
+            initializeAfterConsent() {
+                // Wait for consent manager to be available
+                const waitForConsent = () => {
+                    if (window.consentManager) {
+                        this.consentManager = window.consentManager;
+                        this.initEventListeners();
+                        this.initializeAudioAndWelcome();
+                    } else {
+                        setTimeout(waitForConsent, 100);
+                    }
+                };
+                waitForConsent();
+            }
+
+            reinitializeAfterConsent() {
+                console.log('🔄 Reinitializing bot after consent granted');
+                
+                // Ensure consent manager is available
+                if (window.consentManager) {
+                    this.consentManager = window.consentManager;
+                }
+                
+                // Re-initialize audio and welcome flow
                 this.initializeAudioAndWelcome();
+                
+                // Ensure button is properly enabled
+                this.recordBtn.disabled = false;
+                this.recordBtn.style.pointerEvents = 'auto';
+                this.recordBtn.style.cursor = 'pointer';
+                
+                console.log('✅ Bot reinitialiation complete - microphone ready!');
+            }
+
+            checkConsentBeforeAction(actionName) {
+                if (!this.consentManager || !this.consentManager.hasValidConsent()) {
+                    console.warn(`🔒 Action blocked: ${actionName} - HIPAA consent required`);
+                    this.showError('HIPAA consent is required before using this mental health support service.');
+                    return false;
+                }
+                return true;
             }
 
             initEventListeners() {
                 this.recordBtn.addEventListener('click', async (event) => {
                     console.log('🎤 Microphone button clicked!', {
                         audioEnabled: this.audioEnabled,
-                        isRecording: this.isRecording
+                        isRecording: this.isRecording,
+                        consentValid: this.consentManager ? this.consentManager.hasValidConsent() : false
                     });
+                    
+                    // Check consent before any recording action
+                    if (!this.checkConsentBeforeAction('recording')) {
+                        console.log('❌ Consent check failed - blocking action');
+                        return;
+                    }
                     
                     try {
                         // Enable audio on first interaction if not already enabled
@@ -746,59 +1191,52 @@
 
                 // Add click-anywhere-to-enable functionality
                 document.addEventListener('click', async (event) => {
-                    if (!this.audioEnabled && event.target !== this.recordBtn) {
+                    if (!this.audioEnabled && event.target !== this.recordBtn && this.checkConsentBeforeAction('audio_activation')) {
                         console.log('🔊 Enabling audio from document click...');
                         await this.enableAudioAndPlayWelcome();
                     }
                 }, { once: true });
 
                 this.clearBtn.addEventListener('click', () => {
-                    this.clearConversation();
+                    if (this.checkConsentBeforeAction('clear_conversation')) {
+                        this.clearConversation();
+                    }
                 });
-
-                this.resourcesBtn.addEventListener('click', () => {
-                    this.showCrisisResources();
-                });
-
-                this.tipsBtn.addEventListener('click', () => {
-                    this.showTherapyTips();
-                });
-                
-                this.analysisBtn.addEventListener('click', () => {
-                    this.toggleAnalysisPanel();
-                });
-                
-                this.consentBtn.addEventListener('click', () => {
-                    this.showConsentModal();
-                });
-                
-                // Enable audio on any user interaction
-                // document.addEventListener('click', async (e) => {
-                //     if (!this.audioEnabled && e.target.closest('.container')) {
-                //         await this.enableAudioAndPlayWelcome();
-                //     }
-                // }, { once: true });
             }
 
             async initializeAudioAndWelcome() {
                 console.log('🚀 Initializing audio and welcome...');
                 
+                // Show status based on consent
+                if (!this.consentManager || !this.consentManager.hasValidConsent()) {
+                    this.status.textContent = '🔒 Please complete the HIPAA consent process to begin';
+                    this.status.className = 'status idle';
+                    this.recordBtn.disabled = true;
+                    return;
+                }
+                
                 // Show prompt to enable audio
-                this.status.textContent = '🔊 Click anywhere to activate audio and hear a welcome message from Dr. Amina';
+                this.status.textContent = '🔊 Click the microphone to activate audio and hear a welcome message from Dr. Amina';
                 this.status.className = 'status idle';
                 
                 // Show a visual indicator that audio is not yet enabled
-                this.recordBtn.textContent = '🔊';
+                this.recordBtn.textContent = '🎤';
                 this.recordBtn.style.background = 'linear-gradient(45deg, #74b9ff, #0984e3)';
                 this.recordBtn.disabled = false; // Ensure button is enabled
                 this.recordBtn.style.pointerEvents = 'auto'; // Ensure button is clickable
                 this.recordBtn.style.cursor = 'pointer';
+                this.recordBtn.style.opacity = '1'; // Ensure button is visible
                 
-                console.log('✅ Button initialized and ready for clicks');
+                console.log('✅ Button initialized and ready for clicks', {
+                    disabled: this.recordBtn.disabled,
+                    pointerEvents: this.recordBtn.style.pointerEvents,
+                    cursor: this.recordBtn.style.cursor,
+                    consentValid: this.consentManager ? this.consentManager.hasValidConsent() : false
+                });
             }
 
             async enableAudioAndPlayWelcome() {
-                if (this.audioEnabled) return;
+                if (this.audioEnabled || !this.checkConsentBeforeAction('enable_audio')) return;
                 
                 try {
                     // Test audio capability by creating a silent audio context
@@ -832,6 +1270,8 @@
             }
 
             async showWelcomeMessage() {
+                if (!this.checkConsentBeforeAction('show_welcome')) return;
+                
                 // Add welcome message from therapist with mixed language support
                 const welcomeMessage = `أهلاً وسهلاً! Assalamu alaikum and welcome! I'm Dr. Amina, your mental health counselor. 
                 You can speak to me in Arabic, English, or naturally mix both languages - كيف ما يريحك. 
@@ -853,7 +1293,7 @@
                             },
                             body: JSON.stringify({
                                 text: welcomeMessage,
-                                session_id: null
+                                session_id: this.getConsentSessionId()
                             })
                         });
                         
@@ -886,7 +1326,15 @@
                 }
             }
 
+            getConsentSessionId() {
+                // Get session ID from consent data for audit trail
+                const consentData = this.consentManager ? this.consentManager.getConsentData() : null;
+                return consentData ? consentData.sessionId : null;
+            }
+
             async startRecording() {
+                if (!this.checkConsentBeforeAction('start_recording')) return;
+                
                 try {
                     this.startTime = Date.now();
                     
@@ -920,6 +1368,8 @@
             }
 
             stopRecording() {
+                if (!this.checkConsentBeforeAction('stop_recording')) return;
+                
                 if (this.mediaRecorder && this.isRecording) {
                     this.mediaRecorder.stop();
                     this.isRecording = false;
@@ -934,11 +1384,17 @@
             }
 
             async sendAudioToTherapist(audioBlob) {
+                if (!this.checkConsentBeforeAction('send_audio')) return;
+                
                 try {
                     const formData = new FormData();
                     formData.append('audio_file', audioBlob, 'therapy_session.wav');
                     
-                    if (this.sessionId) {
+                    // Use consent session ID for audit trail
+                    const consentSessionId = this.getConsentSessionId();
+                    if (consentSessionId) {
+                        formData.append('session_id', consentSessionId);
+                    } else if (this.sessionId) {
                         formData.append('session_id', this.sessionId);
                     }
                     
@@ -981,6 +1437,8 @@
             }
 
             async addMessage(text, sender, audioUrl = null, latency = null) {
+                if (!this.checkConsentBeforeAction('add_message')) return;
+                
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${sender}`;
                 
@@ -1072,6 +1530,8 @@
 
 
             async clearConversation() {
+                if (!this.checkConsentBeforeAction('clear_conversation')) return;
+                
                 const confirm = window.confirm('Are you sure you want to start a new therapy session? Previous conversations will be deleted.');
                 if (!confirm) return;
 
@@ -1105,71 +1565,6 @@
                 }
             }
 
-            async showCrisisResources() {
-                try {
-                    // Since we removed these endpoints, provide static resources
-                    let resourceText = `🚨 MENTAL HEALTH CRISIS RESOURCES:
-
-📞 EMERGENCY HOTLINES:
-• Oman Mental Health Association: 800-77077
-• Ministry of Health Hotline: 24441999
-• International SOS: +968 2459 9500
-
-🚑 EMERGENCY SERVICES:
-• Police: 9999
-• Ambulance: 9999
-
-⚠️ IMPORTANT: If you are having thoughts of harming yourself or others, please contact emergency services immediately or go to the nearest hospital.`;
-
-                    await this.addMessage(resourceText, 'assistant');
-                    
-                } catch (error) {
-                    this.showError('Failed to retrieve help resources: ' + error.message);
-                }
-            }
-
-            async showTherapyTips() {
-                try {
-                    // Provide static therapy tips
-                    let tipsText = `💡 DAILY MENTAL HEALTH TIPS:
-
-🌟 DAILY PRACTICES:
-• Dhikr and dua for peace of mind
-• Express gratitude for blessings received
-• Maintain connections with family and friends
-• Light exercise or morning walks
-• Read Quran or motivational books
-• Meditation or self-reflection
-
-🛡️ COPING STRATEGIES:
-• Deep breathing technique (4-4-4)
-• Journaling or writing feelings
-• Listening to calming music
-• Seeking community support
-• Consulting with an imam if needed
-
-👨‍👩‍👧‍👦 FAMILY SUPPORT:
-• Open communication with family
-• Respecting parents and elders
-• Maintaining good relationships with siblings
-• Asking for prayers and family support
-
-🕊️ SPIRITUAL GUIDANCE:
-• Patience in facing challenges
-• Tawakkul (trust) in Allah SWT
-• Husnudzon (positive thinking)
-• Istighfar and sincere repentance
-• Tahajjud prayer for peace of mind
-
-Remember that maintaining mental health is a journey, not a destination. Be patient and grateful in every step.`;
-
-                    await this.addMessage(tipsText, 'assistant');
-                    
-                } catch (error) {
-                    this.showError('Failed to retrieve therapy tips: ' + error.message);
-                }
-            }
-
             showLoading(show) {
                 this.loading.classList.toggle('show', show);
             }
@@ -1186,154 +1581,19 @@ Remember that maintaining mental health is a journey, not a destination. Be pati
             showMessage(message) {
                 this.addMessage(message, 'assistant');
             }
-            
-            toggleAnalysisPanel() {
-                const panel = document.getElementById('analysisPanel');
-                if (panel.style.display === 'none') {
-                    panel.style.display = 'block';
-                    this.loadSessionAnalysis();
-                } else {
-                    panel.style.display = 'none';
-                }
-            }
-            
-            async loadSessionAnalysis() {
-                if (!this.sessionId) {
-                    document.getElementById('analysisContent').innerHTML = '<p>No active session to analyze.</p>';
-                    return;
-                }
-                
-                try {
-                    const response = await fetch(`/session-analysis/${this.sessionId}`);
-                    if (response.ok) {
-                        const analysis = await response.json();
-                        this.displayAnalysis(analysis);
-                    } else {
-                        document.getElementById('analysisContent').innerHTML = '<p>No analysis data available for this session.</p>';
-                    }
-                } catch (error) {
-                    console.error('Error loading session analysis:', error);
-                    document.getElementById('analysisContent').innerHTML = '<p>Failed to load session analysis.</p>';
-                }
-            }
-            
-            displayAnalysis(analysis) {
-                const content = document.getElementById('analysisContent');
-                let html = `
-                    <div class="analysis-item">
-                        <strong>Total Interactions:</strong> ${analysis.total_interactions}
-                    </div>
-                `;
-                
-                if (analysis.safety_status) {
-                    const alertClass = `alert-${analysis.safety_status.alert_level}`;
-                    html += `
-                        <div class="analysis-item">
-                            <strong>Safety Status:</strong> 
-                            <span class="alert-level ${alertClass}">${analysis.safety_status.alert_level}</span>
-                        </div>
-                        <div class="analysis-item">
-                            <strong>Risk Factors:</strong> ${analysis.safety_status.risk_factors_count}
-                        </div>
-                        <div class="analysis-item">
-                            <strong>Requires Escalation:</strong> ${analysis.safety_status.requires_escalation ? 'Yes' : 'No'}
-                        </div>
-                    `;
-                }
-                
-                if (analysis.intent_status) {
-                    html += `
-                        <div class="analysis-item">
-                            <strong>Primary Emotion:</strong> ${analysis.intent_status.primary_emotion}
-                        </div>
-                        <div class="analysis-item">
-                            <strong>Therapeutic Context:</strong> ${analysis.intent_status.therapeutic_context}
-                        </div>
-                        <div class="analysis-item">
-                            <strong>Emotion Intensity:</strong> ${Math.round(analysis.intent_status.emotion_intensity * 100)}%
-                        </div>
-                    `;
-                }
-                
-                content.innerHTML = html;
-            }
-            
-            showConsentModal() {
-                document.getElementById('consentModal').classList.add('show');
-            }
-            
-            hideConsentModal() {
-                document.getElementById('consentModal').classList.remove('show');
-            }
-            
-            async createSessionConsent() {
-                if (!this.sessionId) {
-                    this.sessionId = 'session_' + Date.now();
-                }
-                
-                const consentData = {
-                    session_id: this.sessionId,
-                    ip_address: '127.0.0.1', // Client IP would be handled server-side
-                    consent_given: document.getElementById('consentGeneral').checked,
-                    recording_consent: document.getElementById('consentRecording').checked,
-                    data_sharing_consent: document.getElementById('consentDataSharing').checked,
-                    anonymization_level: document.getElementById('anonymizationLevel').value,
-                    retention_period: parseInt(document.getElementById('retentionPeriod').value)
-                };
-                
-                try {
-                    const response = await fetch('/session-consent', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: new URLSearchParams(consentData)
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('Session consent created:', result);
-                        return true;
-                    } else {
-                        console.error('Failed to create session consent');
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('Error creating session consent:', error);
-                    return false;
-                }
-            }
         }
         
-        // Global functions for HTML onclick handlers
-        function acceptConsent() {
-            const bot = window.bot;
-            if (bot) {
-                bot.createSessionConsent().then(success => {
-                    if (success) {
-                        bot.hideConsentModal();
-                        bot.showMessage('Data consent has been saved. Thank you!');
-                    } else {
-                        alert('Failed to save consent. Please try again.');
-                    }
-                });
-            }
-        }
-        
-        function declineConsent() {
-            const bot = window.bot;
-            if (bot) {
-                bot.hideConsentModal();
-            }
-        }
-        
-        function hideCrisisResources() {
-            document.getElementById('crisisResources').classList.remove('show');
-        }
-
         // Initialize the mental health bot when page loads
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initializing HIPAA-Compliant Mental Health Bot');
+            
+            // Initialize consent manager first
+            window.consentManager = new HIPAAConsentManager();
+            
+            // Initialize bot (it will wait for consent manager to be ready)
             window.bot = new OmaniMentalHealthBot();
+            
+            console.log('✅ Application initialization complete');
         });
     </script>
 </body>

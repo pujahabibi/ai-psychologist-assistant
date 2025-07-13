@@ -10,7 +10,8 @@ import time
 import threading
 import tempfile
 import math
-from typing import List, Tuple, Dict, Any, Optional, Union
+from typing import List, Tuple, Dict, Any, Optional, Union, AsyncGenerator
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 from ...core.interfaces.audio_service import IAudioService
@@ -421,9 +422,12 @@ class AudioService(IAudioService):
             
             # Export chunk with compression
             chunk_buffer = io.BytesIO()
-            # Use lower quality/compressed format for faster processing
-            compressed_format = "mp3" if format.lower() in ["wav", "m4a", "flac"] else format
-            audio_chunk.export(chunk_buffer, format=compressed_format, bitrate="64k")
+            # Use WAV format for consistent processing per user preference [[memory:2973821]]
+            compressed_format = "wav" if format.lower() in ["wav", "m4a", "flac"] else format
+            if compressed_format == "wav":
+                audio_chunk.export(chunk_buffer, format=compressed_format)
+            else:
+                audio_chunk.export(chunk_buffer, format=compressed_format, bitrate="64k")
             chunk_buffer.seek(0)
             chunk_buffer.name = f"ultra_chunk_{chunk_id}.{compressed_format}"
             
@@ -517,10 +521,10 @@ class AudioService(IAudioService):
             # Apply ultra-fast optimizations
             audio_segment = await self._optimize_audio_segment_ultra_fast(audio_segment)
             
-            # Export with compression for faster network transfer
+            # Export with WAV format for consistent processing per user preference [[memory:2973821]]
             output_buffer = io.BytesIO()
-            export_format = "mp3" if format.lower() in ["wav", "m4a", "flac"] else format
-            audio_segment.export(output_buffer, format=export_format, bitrate="64k")
+            export_format = "wav" if format.lower() in ["wav", "m4a", "flac"] else format
+            audio_segment.export(output_buffer, format=export_format)
             return output_buffer.getvalue()
             
         except Exception as e:
@@ -596,6 +600,111 @@ class AudioService(IAudioService):
     async def text_to_speech(self, text: str) -> AudioData:
         """Convert text to speech using parallel processing (user preference)"""
         return await self.text_to_speech_parallel(text)
+    
+    async def text_to_speech_streaming(self, text: str) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        Convert text to speech with optimized real-time streaming using OpenAI's streaming API
+        Returns audio chunks as they're generated for immediate playback
+        """
+        if not text or not text.strip():
+            yield {
+                "type": "streaming_complete",
+                "chunk_id": 0,
+                "audio_data": AudioData(
+                    audio_bytes=b"",
+                    format="wav",
+                    duration=0.0
+                ),
+                "text": "",
+                "success": True
+            }
+            return
+        
+        start_time = time.time()
+        chunk_id = 0
+        
+        try:
+            print(f"🚀 Starting optimized streaming TTS for text: '{text[:30]}...'")
+            
+            # Use OpenAI's streaming TTS API with optimized settings
+            with self.client.audio.speech.with_streaming_response.create(
+                model="gpt-4o-mini-tts",  # Keep same model as specified
+                voice="alloy",
+                input=text,
+                response_format="wav"  # Use WAV format per user preference [[memory:2973821]]
+            ) as response:
+                
+                # Buffer for accumulating audio chunks
+                audio_buffer = b""
+                # Use optimized buffer size from settings
+                buffer_size = settings.audio_config.streaming_buffer_size  # 4KB for faster streaming
+                
+                # Process streaming response
+                # Process streaming response
+                for chunk in response.iter_bytes(chunk_size=buffer_size):
+                            if chunk:
+                                audio_buffer += chunk
+                                
+                                # Yield audio chunk immediately for real-time playback
+                                yield {
+                                    "type": "streaming_chunk",
+                                    "chunk_id": chunk_id,
+                                    "audio_data": AudioData(
+                                        audio_bytes=chunk,
+                                        format="wav",
+                                        duration=len(chunk) / 16000.0  # Estimated duration
+                                    ),
+                                    "text": text,
+                                    "partial": True,
+                                    "success": True
+                                }
+                                
+                                chunk_id += 1
+                                print(f"⚡ Fast streaming chunk {chunk_id} ({len(chunk)} bytes)")
+                                
+                                # Optional: Add small delay to prevent overwhelming the client
+                                # await asyncio.sleep(0.01)  # 10ms delay
+                
+                # Calculate processing time
+                processing_time = time.time() - start_time
+                
+                # Update performance stats
+                with self._stats_lock:
+                    self.performance_stats["total_tts_calls"] += 1
+                    self.performance_stats["total_processing_time"] += processing_time
+                    self.performance_stats["successful_chunks"] += chunk_id
+                    
+                    # Calculate average time
+                    if self.performance_stats["total_tts_calls"] > 0:
+                        avg_time = self.performance_stats["total_processing_time"] / self.performance_stats["total_tts_calls"]
+                        self.performance_stats["average_processing_time"] = avg_time
+                
+                # Final yield with complete audio
+                yield {
+                    "type": "streaming_complete",
+                    "chunk_id": chunk_id,
+                    "audio_data": AudioData(
+                        audio_bytes=audio_buffer,
+                        format="wav",
+                        duration=len(audio_buffer) / 16000.0  # Estimated duration
+                    ),
+                    "text": text,
+                    "processing_time": processing_time,
+                    "total_chunks": chunk_id,
+                    "success": True
+                }
+                
+                print(f"✅ Optimized streaming TTS completed in {processing_time:.2f}s with {chunk_id} chunks")
+                
+        except Exception as e:
+            print(f"❌ Optimized streaming TTS error: {e}")
+            yield {
+                "type": "streaming_error",
+                "chunk_id": chunk_id,
+                "error": str(e),
+                "text": text,
+                "success": False
+            }
     
     async def text_to_speech_parallel(self, text: str, max_workers: int = None) -> AudioData:
         """
@@ -700,27 +809,38 @@ class AudioService(IAudioService):
             )
     
     def _process_chunk(self, chunk_id: int, text: str) -> Tuple[int, bytes]:
-        """Process a single TTS chunk - simplified and fast"""
+        """Process a single TTS chunk - optimized for speed"""
         start_time = time.time()
         
         try:
             # Create dedicated client for this thread
             client = OpenAI(api_key=self.api_key)
             
-            # Direct TTS call - no complex retry logic
-            response = client.audio.speech.create(
-                model="gpt-4o-mini-tts",
-                voice="alloy",
-                instructions="Speak in a friendly and engaging tone, with a natural flow and a slight hint of warmth. Ensure you user your correct pronounciantion in Indonesian language",
-                input=text,
-                response_format="mp3"
-            )
-            
-            processing_time = time.time() - start_time
-            print(f"⚡ Chunk {chunk_id} completed in {processing_time:.2f}s")
-            
-            return (chunk_id, response.content)
-            
+            # Direct TTS call with timeout - no complex retry logic
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(
+                    client.audio.speech.create,
+                    model="gpt-4o-mini-tts",
+                    voice="alloy",
+                    instructions="Speak in a friendly and engaging tone, with a natural flow and a slight hint of warmth. Ensure you user your correct pronounciantion in Indonesian language",
+                    input=text,
+                    response_format="wav"
+                )
+                
+                try:
+                    # Wait for response with timeout
+                    response = future.result(timeout=settings.audio_config.tts_timeout)
+                    
+                    processing_time = time.time() - start_time
+                    print(f"⚡ Optimized chunk {chunk_id} completed in {processing_time:.2f}s")
+                    
+                    return (chunk_id, response.content)
+                    
+                except concurrent.futures.TimeoutError:
+                    processing_time = time.time() - start_time
+                    print(f"⏱️ Chunk {chunk_id} timeout after {settings.audio_config.tts_timeout}s")
+                    return (chunk_id, b"")
+                    
         except Exception as e:
             processing_time = time.time() - start_time
             print(f"❌ Chunk {chunk_id} failed in {processing_time:.2f}s: {e}")
@@ -731,7 +851,7 @@ class AudioService(IAudioService):
         if not audio_chunks:
             return b""
         
-        # Direct concatenation for MP3 files
+                    # Direct concatenation for WAV files
         merged = b""
         for chunk in audio_chunks:
             if chunk:

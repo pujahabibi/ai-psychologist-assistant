@@ -107,7 +107,7 @@ class TherapyInteractionUseCase:
         user_input: str,
         session_id: Optional[str] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
-        """Process streaming therapy interaction with individual audio chunks"""
+        """Process streaming therapy interaction with optimized word-based chunking"""
         start_time = time.time()
         
         try:
@@ -122,14 +122,13 @@ class TherapyInteractionUseCase:
             # Add user input to session
             session.add_conversation_entry("user", user_input)
             
-            # Initialize streaming variables
-            text_buffer = ""
+            # Initialize optimized streaming variables
+            word_buffer = []
             full_response = ""
-            sentence_queue = []
-            audio_futures = []
-            processed_sentences = []
+            chunk_id = 0
+            words_per_chunk = 5  # Process 5 words at a time for faster response
             
-            print(f"🎬 Starting streaming therapy for session {session_id}")
+            print(f"🚀 Starting optimized streaming therapy for session {session_id}")
             
             # Start streaming response
             async for chunk in self.ai_orchestrator.get_streaming_therapeutic_response(
@@ -138,111 +137,117 @@ class TherapyInteractionUseCase:
                 session_id,
                 self.system_prompt
             ):
-                # Add chunk to buffer
-                text_buffer += chunk
+                # Add chunk to buffer and full response
                 full_response += chunk
                 
-                # Check for sentence boundaries
-                sentences = self._extract_complete_sentences(text_buffer)
+                # Split chunk into words
+                words = chunk.split()
+                word_buffer.extend(words)
                 
-                if sentences:
-                    # Process complete sentences
-                    for sentence in sentences:
-                        sentence_queue.append(sentence)
-                        print(f"📝 Complete sentence: '{sentence}'")
+                # Process words in chunks for immediate TTS
+                while len(word_buffer) >= words_per_chunk:
+                    # Get current word chunk
+                    current_words = word_buffer[:words_per_chunk]
+                    word_buffer = word_buffer[words_per_chunk:]
+                    
+                    # Create text from words
+                    chunk_text = " ".join(current_words)
+                    
+                    if chunk_text.strip():
+                        print(f"⚡ Processing word chunk {chunk_id}: '{chunk_text}'")
                         
-                        # Start TTS processing for this sentence [[memory:3018931]]
-                        future = self.tts_executor.submit(
-                            self._process_sentence_tts, 
-                            sentence, 
-                            len(processed_sentences)
-                        )
-                        audio_futures.append((future, len(processed_sentences), sentence))
-                        processed_sentences.append(sentence)
+                        # Process TTS immediately without complex async nesting
+                        try:
+                            # Start streaming TTS processing
+                            async for audio_chunk in self.audio_service.text_to_speech_streaming(chunk_text):
+                                    if audio_chunk.get("type") == "streaming_chunk":
+                                        yield {
+                                            "type": "realtime_audio_chunk",
+                                            "content": chunk_text,
+                                            "session_id": session_id,
+                                            "chunk_id": chunk_id,
+                                            "audio_chunk_id": audio_chunk.get("chunk_id", 0),
+                                            "audio_data": audio_chunk["audio_data"],
+                                            "partial": True,
+                                            "partial_response": full_response
+                                        }
+                                    elif audio_chunk.get("type") == "streaming_complete":
+                                        yield {
+                                            "type": "sentence_audio_complete",
+                                            "content": chunk_text,
+                                            "session_id": session_id,
+                                            "chunk_id": chunk_id,
+                                            "audio_data": audio_chunk["audio_data"],
+                                            "processing_time": audio_chunk.get("processing_time", 0),
+                                            "total_chunks": audio_chunk.get("total_chunks", 0),
+                                            "partial_response": full_response
+                                        }
+                                        break
+
+                        except Exception as e:
+                            print(f"❌ TTS error for chunk {chunk_id}: {e}")
+                            yield {
+                                "type": "sentence_audio_error",
+                                "content": chunk_text,
+                                "session_id": session_id,
+                                "chunk_id": chunk_id,
+                                "error": str(e),
+                                "partial_response": full_response
+                            }
                         
-                        # Yield streaming update
+                        # Yield text chunk
                         yield {
                             "type": "text_chunk",
-                            "content": sentence,
+                            "content": chunk_text,
                             "session_id": session_id,
-                            "chunk_id": len(processed_sentences) - 1,
+                            "chunk_id": chunk_id,
                             "partial_response": full_response
                         }
-                    
-                    # Remove processed sentences from buffer
-                    text_buffer = self._get_remaining_text(text_buffer, sentences)
+                        
+                        chunk_id += 1
                 
-                # Yield intermediate streaming update
+                # Yield streaming update
                 yield {
                     "type": "streaming_chunk",
                     "content": chunk,
                     "session_id": session_id,
                     "partial_response": full_response
                 }
-                
-                # Check if any audio is ready and send it immediately
-                completed_audio = []
-                for i, (future, chunk_id, sentence) in enumerate(audio_futures):
-                    if future.done():
-                        try:
-                            result = await asyncio.get_event_loop().run_in_executor(None, future.result, 0.1)
-                            if result and result.get("success") and result.get("audio_data"):
-                                # Send individual audio chunk immediately
-                                yield {
-                                    "type": "audio_chunk",
-                                    "content": sentence,
-                                    "session_id": session_id,
-                                    "chunk_id": chunk_id,
-                                    "audio_data": result["audio_data"],
-                                    "partial_response": full_response
-                                }
-                                completed_audio.append(i)
-                                print(f"🎵 Audio chunk {chunk_id} sent immediately")
-                        except Exception as e:
-                            print(f"❌ Error processing audio chunk {chunk_id}: {e}")
-                            completed_audio.append(i)
-                
-                # Remove completed audio futures
-                for i in reversed(completed_audio):
-                    audio_futures.pop(i)
             
-            # Process any remaining text
-            if text_buffer.strip():
-                print(f"📝 Processing remaining text: '{text_buffer}'")
-                future = self.tts_executor.submit(
-                    self._process_sentence_tts,
-                    text_buffer.strip(),
-                    len(processed_sentences)
-                )
-                audio_futures.append((future, len(processed_sentences), text_buffer.strip()))
-                processed_sentences.append(text_buffer.strip())
-                
-                yield {
-                    "type": "text_chunk",
-                    "content": text_buffer.strip(),
-                    "session_id": session_id,
-                    "chunk_id": len(processed_sentences) - 1,
-                    "partial_response": full_response
-                }
-            
-            # Wait for any remaining audio processing and send them
-            print(f"🎵 Waiting for {len(audio_futures)} remaining TTS processes...")
-            for future, chunk_id, sentence in audio_futures:
-                try:
-                    result = await asyncio.get_event_loop().run_in_executor(None, future.result, 30)
-                    if result and result.get("success") and result.get("audio_data"):
-                        # Send individual audio chunk
-                        yield {
-                            "type": "audio_chunk",
-                            "content": sentence,
-                            "session_id": session_id,
-                            "chunk_id": chunk_id,
-                            "audio_data": result["audio_data"],
-                            "partial_response": full_response
-                        }
-                        print(f"🎵 Final audio chunk {chunk_id} sent")
-                except Exception as e:
-                    print(f"❌ TTS processing failed for chunk {chunk_id}: {e}")
+            # Process remaining words in buffer
+            if word_buffer:
+                remaining_text = " ".join(word_buffer)
+                if remaining_text.strip():
+                    print(f"⚡ Processing remaining words: '{remaining_text}'")
+                    
+                    try:
+                        # Process remaining text streaming TTS
+                        async for audio_chunk in self.audio_service.text_to_speech_streaming(remaining_text):
+                                if audio_chunk.get("type") == "streaming_chunk":
+                                    yield {
+                                        "type": "realtime_audio_chunk",
+                                        "content": remaining_text,
+                                        "session_id": session_id,
+                                        "chunk_id": chunk_id,
+                                        "audio_chunk_id": audio_chunk.get("chunk_id", 0),
+                                        "audio_data": audio_chunk["audio_data"],
+                                        "partial": True,
+                                        "partial_response": full_response
+                                    }
+                                elif audio_chunk.get("type") == "streaming_complete":
+                                    yield {
+                                        "type": "sentence_audio_complete",
+                                        "content": remaining_text,
+                                        "session_id": session_id,
+                                        "chunk_id": chunk_id,
+                                        "audio_data": audio_chunk["audio_data"],
+                                        "processing_time": audio_chunk.get("processing_time", 0),
+                                        "total_chunks": audio_chunk.get("total_chunks", 0),
+                                        "partial_response": full_response
+                                    }
+                                    break
+                    except Exception as e:
+                        print(f"❌ TTS error for remaining text: {e}")
             
             # Add AI response to session
             session.add_conversation_entry("assistant", full_response)
@@ -253,18 +258,20 @@ class TherapyInteractionUseCase:
             # Calculate latency
             latency = time.time() - start_time
             
-            # Final yield with complete response (no merged audio)
+            print(f"✅ Optimized streaming completed in {latency:.2f}s with {chunk_id} chunks")
+            
+            # Final yield with complete response
             yield {
                 "type": "complete_response",
                 "content": full_response,
                 "session_id": session_id,
                 "latency": latency,
-                "sentences_processed": len(processed_sentences),
+                "chunks_processed": chunk_id,
                 "success": True
             }
             
         except Exception as e:
-            print(f"❌ Error in streaming therapy: {e}")
+            print(f"❌ Streaming therapy error: {e}")
             yield {
                 "type": "error",
                 "error": f"Terjadi kesalahan dalam memproses permintaan Anda: {str(e)}",
@@ -298,31 +305,50 @@ class TherapyInteractionUseCase:
         return remaining
 
     def _process_sentence_tts(self, sentence: str, chunk_id: int) -> Dict[str, Any]:
-        """Process a single sentence through TTS (synchronous for executor)"""
+        """Process a single sentence through streaming TTS (synchronous for executor) - Legacy method"""
         try:
-            print(f"🎤 Processing TTS for chunk {chunk_id}: '{sentence[:50]}...'")
+            print(f"🎤 Processing streaming TTS for chunk {chunk_id}: '{sentence[:50]}...'")
             
-            # Run TTS processing synchronously
+            # Run streaming TTS processing synchronously
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             
             try:
-                # Use parallel TTS processing [[memory:3018931]]
-                audio_data = loop.run_until_complete(
-                    self.audio_service.text_to_speech_parallel(sentence)
-                )
+                # Use streaming TTS processing for real-time audio
+                audio_chunks = []
+                complete_audio = None
                 
+                async def collect_streaming_chunks():
+                    async for chunk in self.audio_service.text_to_speech_streaming(sentence):
+                        if chunk.get("type") == "streaming_chunk":
+                            # Collect streaming chunks
+                            audio_chunks.append(chunk["audio_data"].audio_bytes)
+                        elif chunk.get("type") == "streaming_complete":
+                            # Get the complete audio data
+                            nonlocal complete_audio
+                            complete_audio = chunk["audio_data"]
+                            break
+                        elif chunk.get("type") == "streaming_error":
+                            print(f"❌ Streaming TTS error for chunk {chunk_id}: {chunk.get('error')}")
+                            raise Exception(chunk.get("error", "Unknown streaming error"))
+                
+                # Run the async function in the event loop
+                loop.run_until_complete(collect_streaming_chunks())
+                
+                # Return the complete audio data
                 return {
                     "chunk_id": chunk_id,
-                    "audio_data": audio_data,
+                    "audio_data": complete_audio,
                     "sentence": sentence,
-                    "success": True
+                    "success": True,
+                    "streaming_chunks": len(audio_chunks)
                 }
+                
             finally:
                 loop.close()
                 
         except Exception as e:
-            print(f"❌ TTS processing failed for chunk {chunk_id}: {e}")
+            print(f"❌ Streaming TTS processing failed for chunk {chunk_id}: {e}")
             return {
                 "chunk_id": chunk_id,
                 "audio_data": None,
@@ -331,6 +357,8 @@ class TherapyInteractionUseCase:
                 "error": str(e)
             }
 
+    # Note: Streaming TTS processing is now handled directly in the main streaming loop for better performance
+    
     # Note: Audio merging method removed - now sending individual audio chunks
     
     async def process_text_therapy(

@@ -171,7 +171,7 @@ async def voice_therapy(
         # Save audio response to file
         audio_url = None
         if audio_response_data and audio_response_data.audio_bytes:
-            audio_filename = f"therapy_response_{uuid.uuid4().hex}.mp3"
+            audio_filename = f"therapy_response_{uuid.uuid4().hex}.wav"
             audio_path = static_dir / audio_filename
             
             async with aiofiles.open(audio_path, "wb") as f:
@@ -232,12 +232,12 @@ async def streaming_therapy(request: TextRequest):
                     
                     yield f"data: {json.dumps(final_response)}\n\n"
                     
-                elif chunk.get("type") == "audio_chunk":
-                    # Individual audio chunk - save and send immediately
+                elif chunk.get("type") == "realtime_audio_chunk":
+                    # Real-time streaming audio chunk - save and send immediately
                     audio_url = None
                     if chunk.get("audio_data") and chunk["audio_data"].audio_bytes:
-                        # Save individual audio chunk to file
-                        audio_filename = f"audio_chunk_{session_id}_{chunk.get('chunk_id', 0)}.mp3"
+                        # Save individual streaming audio chunk to file
+                        audio_filename = f"stream_audio_{session_id}_{chunk.get('chunk_id', 0)}_{chunk.get('audio_chunk_id', 0)}.wav"
                         audio_path = static_dir / audio_filename
                         
                         async with aiofiles.open(audio_path, "wb") as f:
@@ -245,17 +245,59 @@ async def streaming_therapy(request: TextRequest):
                         
                         audio_url = f"/static/{audio_filename}"
                     
-                    # Send audio chunk immediately
+                    # Send streaming audio chunk immediately
                     audio_response = {
-                        "type": "audio_chunk",
+                        "type": "realtime_audio_chunk",
                         "content": chunk.get("content", ""),
                         "session_id": chunk.get("session_id"),
                         "chunk_id": chunk.get("chunk_id", 0),
+                        "audio_chunk_id": chunk.get("audio_chunk_id", 0),
                         "audio_url": audio_url,
+                        "partial": chunk.get("partial", True),
                         "partial_response": chunk.get("partial_response", "")
                     }
                     
                     yield f"data: {json.dumps(audio_response)}\n\n"
+                    
+                elif chunk.get("type") == "sentence_audio_complete":
+                    # Complete audio for a sentence - save and send
+                    audio_url = None
+                    if chunk.get("audio_data") and chunk["audio_data"].audio_bytes:
+                        # Save complete sentence audio to file
+                        audio_filename = f"sentence_audio_{session_id}_{chunk.get('chunk_id', 0)}.wav"
+                        audio_path = static_dir / audio_filename
+                        
+                        async with aiofiles.open(audio_path, "wb") as f:
+                            await f.write(chunk["audio_data"].audio_bytes)
+                        
+                        audio_url = f"/static/{audio_filename}"
+                    
+                    # Send complete sentence audio
+                    audio_response = {
+                        "type": "sentence_audio_complete",
+                        "content": chunk.get("content", ""),
+                        "session_id": chunk.get("session_id"),
+                        "chunk_id": chunk.get("chunk_id", 0),
+                        "audio_url": audio_url,
+                        "processing_time": chunk.get("processing_time", 0),
+                        "total_chunks": chunk.get("total_chunks", 0),
+                        "partial_response": chunk.get("partial_response", "")
+                    }
+                    
+                    yield f"data: {json.dumps(audio_response)}\n\n"
+                    
+                elif chunk.get("type") == "sentence_audio_error":
+                    # Audio processing error for a sentence
+                    error_response = {
+                        "type": "sentence_audio_error",
+                        "content": chunk.get("content", ""),
+                        "session_id": chunk.get("session_id"),
+                        "chunk_id": chunk.get("chunk_id", 0),
+                        "error": chunk.get("error", "Unknown audio error"),
+                        "partial_response": chunk.get("partial_response", "")
+                    }
+                    
+                    yield f"data: {json.dumps(error_response)}\n\n"
                     
                 elif chunk.get("type") == "text_chunk":
                     # Individual sentence processed
@@ -404,7 +446,7 @@ async def text_to_speech_endpoint(request: TextRequest):
             raise HTTPException(status_code=500, detail="Could not generate audio")
         
         # Save audio to file
-        audio_filename = f"tts_output_{uuid.uuid4().hex}.mp3"
+        audio_filename = f"tts_output_{uuid.uuid4().hex}.wav"
         audio_path = static_dir / audio_filename
         
         async with aiofiles.open(audio_path, "wb") as f:

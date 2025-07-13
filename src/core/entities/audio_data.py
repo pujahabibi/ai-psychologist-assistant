@@ -16,7 +16,7 @@ class AudioData:
     """
     audio_id: str = field(default_factory=lambda: str(uuid4()))
     audio_bytes: bytes = field(default_factory=bytes)
-    format: str = "mp3"  # Following user preference for mp3 format
+    format: str = "wav"  # Following user preference for wav format
     duration: Optional[float] = None
     sample_rate: Optional[int] = None
     channels: Optional[int] = None
@@ -34,7 +34,7 @@ class AudioData:
         """Check if audio data is valid"""
         return (
             len(self.audio_bytes) > 0 and
-            self.format in ["mp3", "wav", "m4a", "ogg"] and
+            self.format in ["wav", "mp3", "m4a", "ogg"] and
             self.file_size is not None and
             self.file_size > 100  # Minimum file size check
         )

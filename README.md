@@ -159,7 +159,7 @@ python app.py
 Intelligent text chunking with parallel processing for faster audio generation:
 - **Always uses parallel processing** (per user preference)
 - Smart worker allocation (8 workers by default)
-- **MP3 format** (per user preference)
+- **WAV format** (per user preference)
 - Performance metrics and monitoring
 
 ### Model Fallback Logic
@@ -257,7 +257,7 @@ print(f"Primary: {validation.get_primary_or_fallback().content}")
 - **Model names**: gpt-4.1 and claude-3-5-sonnet-20241022
 - **Hyperparameters**: temperature=0.3, max_tokens=512, etc.
 - **API endpoints**: All original endpoints maintained
-- **User preferences**: Parallel TTS, MP3 format
+- **User preferences**: Parallel TTS, WAV format
 
 ### Breaking Changes
 - None - all original functionality preserved
